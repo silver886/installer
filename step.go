@@ -17,18 +17,18 @@ func NewStep(doer func() error, undoer func() error) (*Step, error) {
 		doer:   doer,
 		undoer: undoer,
 	}
-	if doer == nil {
-		return nil, ErrStepNoDoer
-	} else if s.undoer == nil {
-		return nil, ErrStepNoUndoer
+	if err := s.checkDoer(); err != nil {
+		return nil, err
+	} else if err := s.checkUndoer(); err != nil {
+		return nil, err
 	}
 	return s, nil
 }
 
 // Do triggers the doer.
 func (s *Step) Do() error {
-	if s.doer == nil {
-		return ErrStepNoDoer
+	if err := s.checkDoer(); err != nil {
+		return err
 	}
 	if s.done {
 		return ErrStepDone
@@ -42,8 +42,8 @@ func (s *Step) Do() error {
 
 // Undo triggers the undoer.
 func (s *Step) Undo() error {
-	if s.undoer == nil {
-		return ErrStepNoUndoer
+	if err := s.checkUndoer(); err != nil {
+		return err
 	}
 	if s.undone {
 		return ErrStepUndone
@@ -79,4 +79,18 @@ func (s *Step) UndoError() error {
 		return ErrStepNonUndone
 	}
 	return s.undoErr
+}
+
+func (s *Step) checkDoer() error {
+	if s.doer == nil {
+		return ErrStepNoDoer
+	}
+	return nil
+}
+
+func (s *Step) checkUndoer() error {
+	if s.undoer == nil {
+		return ErrStepNoUndoer
+	}
+	return nil
 }

@@ -3,9 +3,9 @@ package installer
 import "errors"
 
 var (
-	// ErrStepNoDoer means the step does not have doer seted.
+	// ErrStepNoDoer means the step does not have doer.
 	ErrStepNoDoer = errors.New("No doer")
-	// ErrStepNoUndoer means the step does not have undoer seted.
+	// ErrStepNoUndoer means the step does not have undoer.
 	ErrStepNoUndoer = errors.New("No undoer")
 	// ErrStepNonDone means the step had not been done.
 	ErrStepNonDone = errors.New("Non done")
