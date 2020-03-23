@@ -68,8 +68,7 @@ func TestStepNew(t *testing.T) {
 }
 
 func TestStepDo(t *testing.T) {
-	t.Log("Normally do a step.")
-	var normalTest = []struct {
+	var test = []struct {
 		doer   func() error
 		result error
 	}{
@@ -82,7 +81,9 @@ func TestStepDo(t *testing.T) {
 			result: errors.New(""),
 		},
 	}
-	for _, tt := range normalTest {
+
+	t.Log("Normally do a step.")
+	for _, tt := range test {
 		t.Run("Normal", func(t *testing.T) {
 			s := &Step{
 				doer: tt.doer,
@@ -104,20 +105,7 @@ func TestStepDo(t *testing.T) {
 	})
 
 	t.Log("Do a done step.")
-	var doneTest = []struct {
-		doer   func() error
-		result error
-	}{
-		{
-			doer:   func() error { return nil },
-			result: nil,
-		},
-		{
-			doer:   func() error { return errors.New("") },
-			result: errors.New(""),
-		},
-	}
-	for _, tt := range doneTest {
+	for _, tt := range test {
 		t.Run("Done", func(t *testing.T) {
 			s := &Step{
 				doer: tt.doer,
@@ -131,8 +119,7 @@ func TestStepDo(t *testing.T) {
 }
 
 func TestStepUndo(t *testing.T) {
-	t.Log("Normally undo a step.")
-	var normalTest = []struct {
+	var test = []struct {
 		undoer func() error
 		result error
 	}{
@@ -145,7 +132,9 @@ func TestStepUndo(t *testing.T) {
 			result: errors.New(""),
 		},
 	}
-	for _, tt := range normalTest {
+
+	t.Log("Normally undo a step.")
+	for _, tt := range test {
 		t.Run("Normal", func(t *testing.T) {
 			s := &Step{
 				undoer: tt.undoer,
@@ -167,20 +156,7 @@ func TestStepUndo(t *testing.T) {
 	})
 
 	t.Log("Undo an undone step.")
-	var undoneTest = []struct {
-		undoer func() error
-		result error
-	}{
-		{
-			undoer: func() error { return nil },
-			result: nil,
-		},
-		{
-			undoer: func() error { return errors.New("") },
-			result: errors.New(""),
-		},
-	}
-	for _, tt := range undoneTest {
+	for _, tt := range test {
 		t.Run("Undone", func(t *testing.T) {
 			s := &Step{
 				undoer: tt.undoer,
@@ -302,12 +278,13 @@ func TestStepUndoneProgress(t *testing.T) {
 }
 
 func TestStepDoError(t *testing.T) {
-	t.Log("Get do error from an done step.")
-	var normalTest = []error{
+	var test = []error{
 		nil,
 		errors.New(""),
 	}
-	for _, tt := range normalTest {
+
+	t.Log("Get do error from an done step.")
+	for _, tt := range test {
 		t.Run("Normal", func(t *testing.T) {
 			s := &Step{
 				done:  true,
@@ -320,11 +297,7 @@ func TestStepDoError(t *testing.T) {
 	}
 
 	t.Log("Get do error from a non-done step.")
-	var nonDoneTest = []error{
-		nil,
-		errors.New(""),
-	}
-	for _, tt := range nonDoneTest {
+	for _, tt := range test {
 		t.Run("Non-done", func(t *testing.T) {
 			s := &Step{
 				doErr: tt,
@@ -337,12 +310,13 @@ func TestStepDoError(t *testing.T) {
 }
 
 func TestStepUndoError(t *testing.T) {
-	t.Log("Get undo error from an undone step.")
-	var normalTest = []error{
+	var test = []error{
 		nil,
 		errors.New(""),
 	}
-	for _, tt := range normalTest {
+
+	t.Log("Get undo error from an undone step.")
+	for _, tt := range test {
 		t.Run("Normal", func(t *testing.T) {
 			s := &Step{
 				undone:  true,
@@ -355,11 +329,7 @@ func TestStepUndoError(t *testing.T) {
 	}
 
 	t.Log("Get undo error from a non-undone step.")
-	var nonUndoneTest = []error{
-		nil,
-		errors.New(""),
-	}
-	for _, tt := range nonUndoneTest {
+	for _, tt := range test {
 		t.Run("Non-undone", func(t *testing.T) {
 			s := &Step{
 				undoErr: tt,
