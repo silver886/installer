@@ -229,6 +229,78 @@ func TestStepUndone(t *testing.T) {
 	}
 }
 
+func TestStepDoneStep(t *testing.T) {
+	t.Log("Get done step status.")
+	var normalTest = []bool{
+		true,
+		false,
+	}
+	for _, tt := range normalTest {
+		t.Run("Normal", func(t *testing.T) {
+			s := &Step{
+				done: tt,
+			}
+			if (s.DoneStep() == 1) != tt {
+				t.Error("Done step status should be the same.")
+			}
+		})
+	}
+}
+
+func TestStepUndoneStep(t *testing.T) {
+	t.Log("Get undone step status.")
+	var normalTest = []bool{
+		true,
+		false,
+	}
+	for _, tt := range normalTest {
+		t.Run("Normal", func(t *testing.T) {
+			s := &Step{
+				undone: tt,
+			}
+			if (s.UndoneStep() == 1) != tt {
+				t.Error("Undone step status should be the same.")
+			}
+		})
+	}
+}
+
+func TestStepDoneProgress(t *testing.T) {
+	t.Log("Get done progress status.")
+	var normalTest = []bool{
+		true,
+		false,
+	}
+	for _, tt := range normalTest {
+		t.Run("Normal", func(t *testing.T) {
+			s := &Step{
+				done: tt,
+			}
+			if (s.DoneProgress() == 1) != tt {
+				t.Error("Done progress status of step should be the same.")
+			}
+		})
+	}
+}
+
+func TestStepUndoneProgress(t *testing.T) {
+	t.Log("Get undone progress status.")
+	var normalTest = []bool{
+		true,
+		false,
+	}
+	for _, tt := range normalTest {
+		t.Run("Normal", func(t *testing.T) {
+			s := &Step{
+				undone: tt,
+			}
+			if (s.UndoneProgress() == 1) != tt {
+				t.Error("Undone progress status of step should be the same.")
+			}
+		})
+	}
+}
+
 func TestStepDoError(t *testing.T) {
 	t.Log("Get do error from an done step.")
 	var normalTest = []error{

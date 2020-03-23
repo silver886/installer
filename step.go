@@ -65,6 +65,38 @@ func (s *Step) Undone() bool {
 	return s.undone
 }
 
+// DoneStep retuen the step status of doer.
+func (s *Step) DoneStep() int {
+	if s.done {
+		return 1
+	}
+	return 0
+}
+
+// UndoneStep retuen the step status of undoer.
+func (s *Step) UndoneStep() int {
+	if s.undone {
+		return 1
+	}
+	return 0
+}
+
+// DoneProgress retuen the progress status of doer.
+func (s *Step) DoneProgress() float64 {
+	if s.done {
+		return 1
+	}
+	return 0
+}
+
+// UndoneProgress retuen the progress status of undoer.
+func (s *Step) UndoneProgress() float64 {
+	if s.undone {
+		return 1
+	}
+	return 0
+}
+
 // DoError retuen the error during doing action.
 func (s *Step) DoError() error {
 	if !s.done {
