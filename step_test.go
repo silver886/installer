@@ -5,23 +5,9 @@ import (
 	"testing"
 )
 
-func TestStepSetDoer(t *testing.T) {
-	t.Log("Normally set a doer to a step.")
-	var normalTest = []func() error{
-		func() error { return nil },
-		func() error { return errors.New("") },
-	}
-	for _, tt := range normalTest {
-		t.Run("Normal", func(t *testing.T) {
-			s := &Step{}
-			if err := s.SetDoer(tt); err != nil {
-				t.Error("Doer should be able to set.")
-			}
-		})
-	}
-
-	t.Log("Set multiple doers to a step.")
-	var mutiTest = []struct {
+func TestStepNew(t *testing.T) {
+	t.Log("Normally create a step.")
+	var normalTest = []struct {
 		a func() error
 		b func() error
 	}{
@@ -42,96 +28,40 @@ func TestStepSetDoer(t *testing.T) {
 			func() error { return errors.New("") },
 		},
 	}
-	for _, tt := range mutiTest {
-		t.Run("Multiple", func(t *testing.T) {
-			s := &Step{}
-			if err := s.SetDoer(tt.a); err != nil {
-				t.Error("The first doer should be able to set.")
-			}
-			if err := s.SetDoer(tt.b); err != nil {
-				t.Error("The second doer should be able to set.")
-			}
-		})
-	}
-
-	t.Log("Set after done to a step.")
-	var doneTest = []func() error{
-		func() error { return nil },
-		func() error { return errors.New("") },
-	}
-	for _, tt := range doneTest {
-		t.Run("Done", func(t *testing.T) {
-			s := &Step{
-				done: true,
-			}
-			if err := s.SetDoer(tt); err != ErrStepDone {
-				t.Error("Doer should not be able to set.")
-			}
-		})
-	}
-}
-
-func TestStepSetUndoer(t *testing.T) {
-	t.Log("Normally set an undoer to a step.")
-	var normalTest = []func() error{
-		func() error { return nil },
-		func() error { return errors.New("") },
-	}
 	for _, tt := range normalTest {
 		t.Run("Normal", func(t *testing.T) {
-			s := &Step{}
-			if err := s.SetUndoer(tt); err != nil {
-				t.Error("Undoer should be able to set.")
+			if s, err := NewStep(tt.a, tt.b); s == nil || s.doer == nil || s.undoer == nil || err != nil {
+				t.Error("Step should be able to create.")
 			}
 		})
 	}
 
-	t.Log("Set multiple undoers to a step.")
-	var mutiTest = []struct {
+	t.Log("Create a step without doer or undoer.")
+	var missingTest = []struct {
 		a func() error
 		b func() error
 	}{
 		{
-			func() error { return nil },
-			func() error { return nil },
-		},
-		{
-			func() error { return nil },
-			func() error { return errors.New("") },
-		},
-		{
-			func() error { return errors.New("") },
+			nil,
 			func() error { return nil },
 		},
 		{
-			func() error { return errors.New("") },
+			nil,
 			func() error { return errors.New("") },
 		},
+		{
+			func() error { return nil },
+			nil,
+		},
+		{
+			func() error { return errors.New("") },
+			nil,
+		},
 	}
-	for _, tt := range mutiTest {
-		t.Run("Multiple", func(t *testing.T) {
-			s := &Step{}
-			if err := s.SetUndoer(tt.a); err != nil {
-				t.Error("The first undoer should be able to set.")
-			}
-			if err := s.SetUndoer(tt.b); err != nil {
-				t.Error("The second undoer should be able to set.")
-			}
-		})
-	}
-
-	t.Log("Set after done to a step.")
-	var doneTest = []func() error{
-		func() error { return nil },
-		func() error { return errors.New("") },
-	}
-	for _, tt := range doneTest {
-		t.Run("Undone", func(t *testing.T) {
-			s := &Step{
-				undone: true,
-			}
-			if err := s.SetUndoer(tt); err != ErrStepUndone {
-				t.Error("Undoer should not be able to set.")
+	for _, tt := range missingTest {
+		t.Run("Missing", func(t *testing.T) {
+			if s, err := NewStep(tt.a, tt.b); s != nil || (err != ErrStepNoDoer && err != ErrStepNoUndoer) {
+				t.Error("Step should not be able to create.")
 			}
 		})
 	}
@@ -258,6 +188,42 @@ func TestStepUndo(t *testing.T) {
 			}
 			if err := s.Undo(); err != ErrStepUndone {
 				t.Error("Step should not be able to undo.")
+			}
+		})
+	}
+}
+
+func TestStepDone(t *testing.T) {
+	t.Log("Get done status.")
+	var normalTest = []bool{
+		true,
+		false,
+	}
+	for _, tt := range normalTest {
+		t.Run("Normal", func(t *testing.T) {
+			s := &Step{
+				done: tt,
+			}
+			if s.Done() != tt {
+				t.Error("Done status of step should be the same.")
+			}
+		})
+	}
+}
+
+func TestStepUndone(t *testing.T) {
+	t.Log("Get undone status.")
+	var normalTest = []bool{
+		true,
+		false,
+	}
+	for _, tt := range normalTest {
+		t.Run("Normal", func(t *testing.T) {
+			s := &Step{
+				undone: tt,
+			}
+			if s.Undone() != tt {
+				t.Error("Undone status of step should be the same.")
 			}
 		})
 	}

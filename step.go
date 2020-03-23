@@ -11,22 +11,18 @@ type Step struct {
 	undone  bool
 }
 
-// SetDoer sets the doer.
-func (s *Step) SetDoer(doer func() error) error {
-	if s.done {
-		return ErrStepDone
+// NewStep creates step with doer and undoer.
+func NewStep(doer func() error, undoer func() error) (*Step, error) {
+	s := &Step{
+		doer:   doer,
+		undoer: undoer,
 	}
-	s.doer = doer
-	return nil
-}
-
-// SetUndoer sets the undoer.
-func (s *Step) SetUndoer(undoer func() error) error {
-	if s.undone {
-		return ErrStepUndone
+	if doer == nil {
+		return nil, ErrStepNoDoer
+	} else if s.undoer == nil {
+		return nil, ErrStepNoUndoer
 	}
-	s.undoer = undoer
-	return nil
+	return s, nil
 }
 
 // Do triggers the doer.
@@ -57,6 +53,16 @@ func (s *Step) Undo() error {
 		return s.undoErr
 	}
 	return nil
+}
+
+// Done retuen the status of doer.
+func (s *Step) Done() bool {
+	return s.done
+}
+
+// Undone retuen the status of undoer.
+func (s *Step) Undone() bool {
+	return s.undone
 }
 
 // DoError retuen the error during the doation.
