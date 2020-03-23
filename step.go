@@ -65,7 +65,7 @@ func (s *Step) Undone() bool {
 	return s.undone
 }
 
-// DoError retuen the error during the doation.
+// DoError retuen the error during doing action.
 func (s *Step) DoError() error {
 	if !s.done {
 		return ErrStepNonDone
@@ -73,7 +73,7 @@ func (s *Step) DoError() error {
 	return s.doErr
 }
 
-// UndoError retuen the error during the doation.
+// UndoError retuen the error during undoing action.
 func (s *Step) UndoError() error {
 	if !s.undone {
 		return ErrStepNonUndone
