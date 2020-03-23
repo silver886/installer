@@ -1,76 +1,76 @@
 package installer
 
-// Step is the basic component of a installer.
+// Step is the basic component of a doer.
 type Step struct {
-	installer  func() error
-	installErr error
-	installed  bool
+	doer  func() error
+	doErr error
+	done  bool
 
-	uninstaller  func() error
-	uninstallErr error
-	uninstalled  bool
+	undoer  func() error
+	undoErr error
+	undone  bool
 }
 
-// RegisterInstaller sets the installer.
-func (s *Step) RegisterInstaller(installer func() error) error {
-	if s.installed {
-		return ErrStepInstalled
+// SetDoer sets the doer.
+func (s *Step) SetDoer(doer func() error) error {
+	if s.done {
+		return ErrStepDone
 	}
-	s.installer = installer
+	s.doer = doer
 	return nil
 }
 
-// RegisterUninstaller sets the uninstaller.
-func (s *Step) RegisterUninstaller(uninstaller func() error) error {
-	if s.uninstalled {
-		return ErrStepUninstalled
+// SetUndoer sets the undoer.
+func (s *Step) SetUndoer(undoer func() error) error {
+	if s.undone {
+		return ErrStepUndone
 	}
-	s.uninstaller = uninstaller
+	s.undoer = undoer
 	return nil
 }
 
-// Install triggers the installer.
-func (s *Step) Install() error {
-	if s.installer == nil {
-		return ErrStepNoInstaller
+// Do triggers the doer.
+func (s *Step) Do() error {
+	if s.doer == nil {
+		return ErrStepNoDoer
 	}
-	if s.installed {
-		return ErrStepInstalled
+	if s.done {
+		return ErrStepDone
 	}
-	s.installErr, s.installed = s.installer(), true
-	if s.installErr != nil {
-		return s.installErr
-	}
-	return nil
-}
-
-// Uninstall triggers the uninstaller.
-func (s *Step) Uninstall() error {
-	if s.uninstaller == nil {
-		return ErrStepNoUninstaller
-	}
-	if s.uninstalled {
-		return ErrStepUninstalled
-	}
-	s.uninstallErr, s.uninstalled = s.uninstaller(), true
-	if s.uninstallErr != nil {
-		return s.uninstallErr
+	s.doErr, s.done = s.doer(), true
+	if s.doErr != nil {
+		return s.doErr
 	}
 	return nil
 }
 
-// InstallError retuen the error during the installation.
-func (s *Step) InstallError() error {
-	if !s.installed {
-		return ErrStepNonInstalled
+// Undo triggers the undoer.
+func (s *Step) Undo() error {
+	if s.undoer == nil {
+		return ErrStepNoUndoer
 	}
-	return s.installErr
+	if s.undone {
+		return ErrStepUndone
+	}
+	s.undoErr, s.undone = s.undoer(), true
+	if s.undoErr != nil {
+		return s.undoErr
+	}
+	return nil
 }
 
-// UninstallError retuen the error during the installation.
-func (s *Step) UninstallError() error {
-	if !s.uninstalled {
-		return ErrStepNonUninstalled
+// DoError retuen the error during the doation.
+func (s *Step) DoError() error {
+	if !s.done {
+		return ErrStepNonDone
 	}
-	return s.uninstallErr
+	return s.doErr
+}
+
+// UndoError retuen the error during the doation.
+func (s *Step) UndoError() error {
+	if !s.undone {
+		return ErrStepNonUndone
+	}
+	return s.undoErr
 }

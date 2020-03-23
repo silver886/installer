@@ -3,16 +3,16 @@ package installer
 import "errors"
 
 var (
-	// ErrStepNoInstaller means the step does not have installer registered.
-	ErrStepNoInstaller = errors.New("No installer")
-	// ErrStepNoUninstaller means the step does not have uninstaller registered.
-	ErrStepNoUninstaller = errors.New("No uninstaller")
-	// ErrStepNonInstalled means the step had not been installed.
-	ErrStepNonInstalled = errors.New("Non installed")
-	// ErrStepNonUninstalled means the step had not been uninstalled.
-	ErrStepNonUninstalled = errors.New("Non uninstalled")
-	// ErrStepInstalled means the step had already installed.
-	ErrStepInstalled = errors.New("Already installed")
-	// ErrStepUninstalled means the step had already uninstalled.
-	ErrStepUninstalled = errors.New("Already uninstalled")
+	// ErrStepNoDoer means the step does not have doer seted.
+	ErrStepNoDoer = errors.New("No doer")
+	// ErrStepNoUndoer means the step does not have undoer seted.
+	ErrStepNoUndoer = errors.New("No undoer")
+	// ErrStepNonDone means the step had not been done.
+	ErrStepNonDone = errors.New("Non done")
+	// ErrStepNonUndone means the step had not been undone.
+	ErrStepNonUndone = errors.New("Non undone")
+	// ErrStepDone means the step had already done.
+	ErrStepDone = errors.New("Already done")
+	// ErrStepUndone means the step had already undone.
+	ErrStepUndone = errors.New("Already undone")
 )

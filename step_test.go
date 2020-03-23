@@ -5,8 +5,8 @@ import (
 	"testing"
 )
 
-func TestStepRegisterInstaller(t *testing.T) {
-	t.Log("Normally register an installer to a step.")
+func TestStepSetDoer(t *testing.T) {
+	t.Log("Normally set a doer to a step.")
 	var normalTest = []func() error{
 		func() error { return nil },
 		func() error { return errors.New("") },
@@ -14,13 +14,13 @@ func TestStepRegisterInstaller(t *testing.T) {
 	for _, tt := range normalTest {
 		t.Run("Normal", func(t *testing.T) {
 			s := &Step{}
-			if err := s.RegisterInstaller(tt); err != nil {
-				t.Error("Installer should be able to register.")
+			if err := s.SetDoer(tt); err != nil {
+				t.Error("Doer should be able to set.")
 			}
 		})
 	}
 
-	t.Log("Register multiple installers to a step.")
+	t.Log("Set multiple doers to a step.")
 	var mutiTest = []struct {
 		a func() error
 		b func() error
@@ -45,34 +45,34 @@ func TestStepRegisterInstaller(t *testing.T) {
 	for _, tt := range mutiTest {
 		t.Run("Multiple", func(t *testing.T) {
 			s := &Step{}
-			if err := s.RegisterInstaller(tt.a); err != nil {
-				t.Error("The first installer should be able to register.")
+			if err := s.SetDoer(tt.a); err != nil {
+				t.Error("The first doer should be able to set.")
 			}
-			if err := s.RegisterInstaller(tt.b); err != nil {
-				t.Error("The second installer should be able to register.")
+			if err := s.SetDoer(tt.b); err != nil {
+				t.Error("The second doer should be able to set.")
 			}
 		})
 	}
 
-	t.Log("Register after installed to a step.")
-	var installedTest = []func() error{
+	t.Log("Set after done to a step.")
+	var doneTest = []func() error{
 		func() error { return nil },
 		func() error { return errors.New("") },
 	}
-	for _, tt := range installedTest {
-		t.Run("Installed", func(t *testing.T) {
+	for _, tt := range doneTest {
+		t.Run("Done", func(t *testing.T) {
 			s := &Step{
-				installed: true,
+				done: true,
 			}
-			if err := s.RegisterInstaller(tt); err != ErrStepInstalled {
-				t.Error("Installer should not be able to register.")
+			if err := s.SetDoer(tt); err != ErrStepDone {
+				t.Error("Doer should not be able to set.")
 			}
 		})
 	}
 }
 
-func TestStepRegisterUninstaller(t *testing.T) {
-	t.Log("Normally register an uninstaller to a step.")
+func TestStepSetUndoer(t *testing.T) {
+	t.Log("Normally set an undoer to a step.")
 	var normalTest = []func() error{
 		func() error { return nil },
 		func() error { return errors.New("") },
@@ -80,13 +80,13 @@ func TestStepRegisterUninstaller(t *testing.T) {
 	for _, tt := range normalTest {
 		t.Run("Normal", func(t *testing.T) {
 			s := &Step{}
-			if err := s.RegisterUninstaller(tt); err != nil {
-				t.Error("Uninstaller should be able to register.")
+			if err := s.SetUndoer(tt); err != nil {
+				t.Error("Undoer should be able to set.")
 			}
 		})
 	}
 
-	t.Log("Register multiple uninstallers to a step.")
+	t.Log("Set multiple undoers to a step.")
 	var mutiTest = []struct {
 		a func() error
 		b func() error
@@ -111,160 +111,160 @@ func TestStepRegisterUninstaller(t *testing.T) {
 	for _, tt := range mutiTest {
 		t.Run("Multiple", func(t *testing.T) {
 			s := &Step{}
-			if err := s.RegisterUninstaller(tt.a); err != nil {
-				t.Error("The first uninstaller should be able to register.")
+			if err := s.SetUndoer(tt.a); err != nil {
+				t.Error("The first undoer should be able to set.")
 			}
-			if err := s.RegisterUninstaller(tt.b); err != nil {
-				t.Error("The second uninstaller should be able to register.")
+			if err := s.SetUndoer(tt.b); err != nil {
+				t.Error("The second undoer should be able to set.")
 			}
 		})
 	}
 
-	t.Log("Register after installed to a step.")
-	var installedTest = []func() error{
+	t.Log("Set after done to a step.")
+	var doneTest = []func() error{
 		func() error { return nil },
 		func() error { return errors.New("") },
 	}
-	for _, tt := range installedTest {
-		t.Run("Uninstalled", func(t *testing.T) {
+	for _, tt := range doneTest {
+		t.Run("Undone", func(t *testing.T) {
 			s := &Step{
-				uninstalled: true,
+				undone: true,
 			}
-			if err := s.RegisterUninstaller(tt); err != ErrStepUninstalled {
-				t.Error("Uninstaller should not be able to register.")
+			if err := s.SetUndoer(tt); err != ErrStepUndone {
+				t.Error("Undoer should not be able to set.")
 			}
 		})
 	}
 }
 
-func TestStepInstall(t *testing.T) {
-	t.Log("Normally install a step.")
+func TestStepDo(t *testing.T) {
+	t.Log("Normally do a step.")
 	var normalTest = []struct {
-		installer func() error
-		result    error
+		doer   func() error
+		result error
 	}{
 		{
-			installer: func() error { return nil },
-			result:    nil,
+			doer:   func() error { return nil },
+			result: nil,
 		},
 		{
-			installer: func() error { return errors.New("") },
-			result:    errors.New(""),
+			doer:   func() error { return errors.New("") },
+			result: errors.New(""),
 		},
 	}
 	for _, tt := range normalTest {
 		t.Run("Normal", func(t *testing.T) {
 			s := &Step{
-				installer: tt.installer,
+				doer: tt.doer,
 			}
-			if err := s.Install(); err != tt.result && err.Error() != tt.result.Error() {
-				t.Error("Step should be able to install.")
-			} else if err != nil && s.installErr.Error() != tt.result.Error() {
+			if err := s.Do(); err != tt.result && err.Error() != tt.result.Error() {
+				t.Error("Step should be able to do.")
+			} else if err != nil && s.doErr.Error() != tt.result.Error() {
 				t.Error("Step should be have a same error internally.")
 			}
 		})
 	}
 
-	t.Log("Install an emtpy step.")
+	t.Log("Do an emtpy step.")
 	t.Run("Emtpy", func(t *testing.T) {
 		s := &Step{}
-		if err := s.Install(); err != ErrStepNoInstaller {
-			t.Error("Step should not be able to install.")
+		if err := s.Do(); err != ErrStepNoDoer {
+			t.Error("Step should not be able to do.")
 		}
 	})
 
-	t.Log("Install an insttalled step.")
-	var installedTest = []struct {
-		installer func() error
-		result    error
+	t.Log("Do an insttalled step.")
+	var doneTest = []struct {
+		doer   func() error
+		result error
 	}{
 		{
-			installer: func() error { return nil },
-			result:    nil,
+			doer:   func() error { return nil },
+			result: nil,
 		},
 		{
-			installer: func() error { return errors.New("") },
-			result:    errors.New(""),
+			doer:   func() error { return errors.New("") },
+			result: errors.New(""),
 		},
 	}
-	for _, tt := range installedTest {
-		t.Run("Installed", func(t *testing.T) {
+	for _, tt := range doneTest {
+		t.Run("Done", func(t *testing.T) {
 			s := &Step{
-				installer: tt.installer,
-				installed: true,
+				doer: tt.doer,
+				done: true,
 			}
-			if err := s.Install(); err != ErrStepInstalled {
-				t.Error("Step should not be able to install.")
+			if err := s.Do(); err != ErrStepDone {
+				t.Error("Step should not be able to do.")
 			}
 		})
 	}
 }
 
-func TestStepUninstall(t *testing.T) {
-	t.Log("Normally uninstall a step.")
+func TestStepUndo(t *testing.T) {
+	t.Log("Normally undo a step.")
 	var normalTest = []struct {
-		uninstaller func() error
-		result      error
+		undoer func() error
+		result error
 	}{
 		{
-			uninstaller: func() error { return nil },
-			result:      nil,
+			undoer: func() error { return nil },
+			result: nil,
 		},
 		{
-			uninstaller: func() error { return errors.New("") },
-			result:      errors.New(""),
+			undoer: func() error { return errors.New("") },
+			result: errors.New(""),
 		},
 	}
 	for _, tt := range normalTest {
 		t.Run("Normal", func(t *testing.T) {
 			s := &Step{
-				uninstaller: tt.uninstaller,
+				undoer: tt.undoer,
 			}
-			if err := s.Uninstall(); err != tt.result && err.Error() != tt.result.Error() {
-				t.Error("Step should be able to uninstall.")
-			} else if err != nil && s.uninstallErr.Error() != tt.result.Error() {
+			if err := s.Undo(); err != tt.result && err.Error() != tt.result.Error() {
+				t.Error("Step should be able to undo.")
+			} else if err != nil && s.undoErr.Error() != tt.result.Error() {
 				t.Error("Step should be have a same error internally.")
 			}
 		})
 	}
 
-	t.Log("Uninstall an emtpy step.")
+	t.Log("Undo an emtpy step.")
 	t.Run("Emtpy", func(t *testing.T) {
 		s := &Step{}
-		if err := s.Uninstall(); err != ErrStepNoUninstaller {
-			t.Error("Step should not be able to uninstall.")
+		if err := s.Undo(); err != ErrStepNoUndoer {
+			t.Error("Step should not be able to undo.")
 		}
 	})
 
-	t.Log("Uninstall an insttalled step.")
-	var uninstalledTest = []struct {
-		uninstaller func() error
-		result      error
+	t.Log("Undo an insttalled step.")
+	var undoneTest = []struct {
+		undoer func() error
+		result error
 	}{
 		{
-			uninstaller: func() error { return nil },
-			result:      nil,
+			undoer: func() error { return nil },
+			result: nil,
 		},
 		{
-			uninstaller: func() error { return errors.New("") },
-			result:      errors.New(""),
+			undoer: func() error { return errors.New("") },
+			result: errors.New(""),
 		},
 	}
-	for _, tt := range uninstalledTest {
-		t.Run("Uninstalled", func(t *testing.T) {
+	for _, tt := range undoneTest {
+		t.Run("Undone", func(t *testing.T) {
 			s := &Step{
-				uninstaller: tt.uninstaller,
-				uninstalled: true,
+				undoer: tt.undoer,
+				undone: true,
 			}
-			if err := s.Uninstall(); err != ErrStepUninstalled {
-				t.Error("Step should not be able to uninstall.")
+			if err := s.Undo(); err != ErrStepUndone {
+				t.Error("Step should not be able to undo.")
 			}
 		})
 	}
 }
 
-func TestStepInstallError(t *testing.T) {
-	t.Log("Get install error from an installed step.")
+func TestStepDoError(t *testing.T) {
+	t.Log("Get do error from an done step.")
 	var normalTest = []error{
 		nil,
 		errors.New(""),
@@ -272,34 +272,34 @@ func TestStepInstallError(t *testing.T) {
 	for _, tt := range normalTest {
 		t.Run("Normal", func(t *testing.T) {
 			s := &Step{
-				installed:  true,
-				installErr: tt,
+				done:  true,
+				doErr: tt,
 			}
-			if err := s.InstallError(); err != tt && err.Error() != tt.Error() {
-				t.Error("Install error should be able to get.")
+			if err := s.DoError(); err != tt && err.Error() != tt.Error() {
+				t.Error("Do error should be able to get.")
 			}
 		})
 	}
 
-	t.Log("Get install error from a non-installed step.")
-	var nonInstalledTest = []error{
+	t.Log("Get do error from a non-done step.")
+	var nonDoneTest = []error{
 		nil,
 		errors.New(""),
 	}
-	for _, tt := range nonInstalledTest {
-		t.Run("Non-installed", func(t *testing.T) {
+	for _, tt := range nonDoneTest {
+		t.Run("Non-done", func(t *testing.T) {
 			s := &Step{
-				installErr: tt,
+				doErr: tt,
 			}
-			if err := s.InstallError(); err != ErrStepNonInstalled {
-				t.Error("Install error should not be able to get.")
+			if err := s.DoError(); err != ErrStepNonDone {
+				t.Error("Do error should not be able to get.")
 			}
 		})
 	}
 }
 
-func TestStepUninstallError(t *testing.T) {
-	t.Log("Get uninstall error from an uninstalled step.")
+func TestStepUndoError(t *testing.T) {
+	t.Log("Get undo error from an undone step.")
 	var normalTest = []error{
 		nil,
 		errors.New(""),
@@ -307,27 +307,27 @@ func TestStepUninstallError(t *testing.T) {
 	for _, tt := range normalTest {
 		t.Run("Normal", func(t *testing.T) {
 			s := &Step{
-				uninstalled:  true,
-				uninstallErr: tt,
+				undone:  true,
+				undoErr: tt,
 			}
-			if err := s.UninstallError(); err != tt && err.Error() != tt.Error() {
-				t.Error("Uninstall error should be able to get.")
+			if err := s.UndoError(); err != tt && err.Error() != tt.Error() {
+				t.Error("Undo error should be able to get.")
 			}
 		})
 	}
 
-	t.Log("Get uninstall error from a non-uninstalled step.")
-	var nonUninstalledTest = []error{
+	t.Log("Get undo error from a non-undone step.")
+	var nonUndoneTest = []error{
 		nil,
 		errors.New(""),
 	}
-	for _, tt := range nonUninstalledTest {
-		t.Run("Non-uninstalled", func(t *testing.T) {
+	for _, tt := range nonUndoneTest {
+		t.Run("Non-undone", func(t *testing.T) {
 			s := &Step{
-				uninstallErr: tt,
+				undoErr: tt,
 			}
-			if err := s.UninstallError(); err != ErrStepNonUninstalled {
-				t.Error("Uninstall error should not be able to get.")
+			if err := s.UndoError(); err != ErrStepNonUndone {
+				t.Error("Undo error should not be able to get.")
 			}
 		})
 	}
