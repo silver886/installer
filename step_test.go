@@ -103,7 +103,7 @@ func TestStepDo(t *testing.T) {
 		}
 	})
 
-	t.Log("Do an insttalled step.")
+	t.Log("Do a done step.")
 	var doneTest = []struct {
 		doer   func() error
 		result error
@@ -166,7 +166,7 @@ func TestStepUndo(t *testing.T) {
 		}
 	})
 
-	t.Log("Undo an insttalled step.")
+	t.Log("Undo an undone step.")
 	var undoneTest = []struct {
 		undoer func() error
 		result error
