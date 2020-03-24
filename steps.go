@@ -19,7 +19,7 @@ type Stepper interface {
 	Reset()
 }
 
-// Steps is the set of step.
+// Steps is the set of steppers.
 type Steps struct {
 	mutex *sync.Mutex
 
