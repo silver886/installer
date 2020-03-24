@@ -95,18 +95,18 @@ func (s *Steps) UndoneStep() int {
 
 // DoneProgress retuen the progress status of doer.
 func (s *Steps) DoneProgress() float64 {
-	if s.done {
-		return float64(s.doneStep) / float64(len(s.steppers))
+	if err := s.checkSteppers(); err != nil || !s.done {
+		return 0
 	}
-	return 0
+	return float64(s.doneStep) / float64(len(s.steppers))
 }
 
 // UndoneProgress retuen the progress status of undoer.
 func (s *Steps) UndoneProgress() float64 {
-	if s.undone {
-		return float64(s.undoneStep) / float64(len(s.steppers))
+	if err := s.checkSteppers(); err != nil || !s.undone {
+		return 0
 	}
-	return 0
+	return float64(s.undoneStep) / float64(len(s.steppers))
 }
 
 // DoError retuen the error during doing steppers.

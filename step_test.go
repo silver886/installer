@@ -241,6 +241,9 @@ func TestStepDoneProgress(t *testing.T) {
 			if (s.DoneProgress() == 1) != tt {
 				t.Error("Done progress status of step should be the same.")
 			}
+			if s.DoneProgress() < 0 || s.DoneProgress() > 1 {
+				t.Error("Done progress exceeds the range of 0~1.")
+			}
 		})
 	}
 }
@@ -258,6 +261,9 @@ func TestStepUndoneProgress(t *testing.T) {
 			}
 			if (s.UndoneProgress() == 1) != tt {
 				t.Error("Undone progress status of step should be the same.")
+			}
+			if s.UndoneProgress() < 0 || s.UndoneProgress() > 1 {
+				t.Error("Undone progress exceeds the range of 0~1.")
 			}
 		})
 	}

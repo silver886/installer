@@ -304,6 +304,11 @@ func TestStepsDoneProgress(t *testing.T) {
 			done:     false,
 			step:     3,
 		},
+		{
+			steppers: []Stepper{},
+			done:     true,
+			step:     3,
+		},
 	}
 	for _, tt := range normalTest {
 		t.Run("Normal", func(t *testing.T) {
@@ -313,8 +318,11 @@ func TestStepsDoneProgress(t *testing.T) {
 				doneStep: tt.step,
 			}
 			if !tt.done && s.DoneProgress() != 0 ||
-				tt.done && s.DoneProgress() != float64(tt.step)/float64(len(tt.steppers)) {
+				tt.done && s.DoneProgress() != float64(tt.step)/float64(len(tt.steppers)) && s.checkSteppers() == nil {
 				t.Error("Done progress status of steps should be the same.")
+			}
+			if s.DoneProgress() < 0 || s.DoneProgress() > 1 {
+				t.Error("Done progress exceeds the range of 0~1.")
 			}
 		})
 	}
@@ -342,6 +350,11 @@ func TestStepsUndoneProgress(t *testing.T) {
 			undone:   false,
 			step:     3,
 		},
+		{
+			steppers: []Stepper{},
+			undone:   true,
+			step:     3,
+		},
 	}
 	for _, tt := range normalTest {
 		t.Run("Normal", func(t *testing.T) {
@@ -351,8 +364,11 @@ func TestStepsUndoneProgress(t *testing.T) {
 				undoneStep: tt.step,
 			}
 			if !tt.undone && s.UndoneProgress() != 0 ||
-				tt.undone && s.UndoneProgress() != float64(tt.step)/float64(len(tt.steppers)) {
+				tt.undone && s.UndoneProgress() != float64(tt.step)/float64(len(tt.steppers)) && s.checkSteppers() == nil {
 				t.Error("Undone progress status of steps should be the same.")
+			}
+			if s.UndoneProgress() < 0 || s.UndoneProgress() > 1 {
+				t.Error("Undone progress exceeds the range of 0~1.")
 			}
 		})
 	}
