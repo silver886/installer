@@ -2,6 +2,7 @@ package installer
 
 import (
 	"errors"
+	"sync"
 	"testing"
 )
 
@@ -72,7 +73,8 @@ func TestStepDo(t *testing.T) {
 	for _, tt := range test {
 		t.Run("Normal", func(t *testing.T) {
 			s := &Step{
-				doer: tt.doer,
+				mutex: &sync.Mutex{},
+				doer:  tt.doer,
 			}
 			if err := s.Do(); err != tt.result && err.Error() != tt.result.Error() {
 				t.Error("Step should be able to do.")
@@ -84,7 +86,9 @@ func TestStepDo(t *testing.T) {
 
 	t.Log("Do an emtpy step.")
 	t.Run("Emtpy", func(t *testing.T) {
-		s := &Step{}
+		s := &Step{
+			mutex: &sync.Mutex{},
+		}
 		if err := s.Do(); err != ErrStepNoDoer {
 			t.Error("Step should not be able to do.")
 		}
@@ -94,8 +98,9 @@ func TestStepDo(t *testing.T) {
 	for _, tt := range test {
 		t.Run("Done", func(t *testing.T) {
 			s := &Step{
-				doer: tt.doer,
-				done: true,
+				mutex: &sync.Mutex{},
+				doer:  tt.doer,
+				done:  true,
 			}
 			if err := s.Do(); err != ErrStepDone {
 				t.Error("Step should not be able to do.")
@@ -123,6 +128,7 @@ func TestStepUndo(t *testing.T) {
 	for _, tt := range test {
 		t.Run("Normal", func(t *testing.T) {
 			s := &Step{
+				mutex:  &sync.Mutex{},
 				undoer: tt.undoer,
 			}
 			if err := s.Undo(); err != tt.result && err.Error() != tt.result.Error() {
@@ -135,7 +141,9 @@ func TestStepUndo(t *testing.T) {
 
 	t.Log("Undo an emtpy step.")
 	t.Run("Emtpy", func(t *testing.T) {
-		s := &Step{}
+		s := &Step{
+			mutex: &sync.Mutex{},
+		}
 		if err := s.Undo(); err != ErrStepNoUndoer {
 			t.Error("Step should not be able to undo.")
 		}
@@ -145,6 +153,7 @@ func TestStepUndo(t *testing.T) {
 	for _, tt := range test {
 		t.Run("Undone", func(t *testing.T) {
 			s := &Step{
+				mutex:  &sync.Mutex{},
 				undoer: tt.undoer,
 				undone: true,
 			}
@@ -164,7 +173,8 @@ func TestStepDone(t *testing.T) {
 	for _, tt := range normalTest {
 		t.Run("Normal", func(t *testing.T) {
 			s := &Step{
-				done: tt,
+				mutex: &sync.Mutex{},
+				done:  tt,
 			}
 			if s.Done() != tt {
 				t.Error("Done status of step should be the same.")
@@ -182,6 +192,7 @@ func TestStepUndone(t *testing.T) {
 	for _, tt := range normalTest {
 		t.Run("Normal", func(t *testing.T) {
 			s := &Step{
+				mutex:  &sync.Mutex{},
 				undone: tt,
 			}
 			if s.Undone() != tt {
@@ -200,7 +211,8 @@ func TestStepDoneStep(t *testing.T) {
 	for _, tt := range normalTest {
 		t.Run("Normal", func(t *testing.T) {
 			s := &Step{
-				done: tt,
+				mutex: &sync.Mutex{},
+				done:  tt,
 			}
 			if (s.DoneStep() == 1) != tt {
 				t.Error("Done step status should be the same.")
@@ -218,6 +230,7 @@ func TestStepUndoneStep(t *testing.T) {
 	for _, tt := range normalTest {
 		t.Run("Normal", func(t *testing.T) {
 			s := &Step{
+				mutex:  &sync.Mutex{},
 				undone: tt,
 			}
 			if (s.UndoneStep() == 1) != tt {
@@ -236,7 +249,8 @@ func TestStepDoneProgress(t *testing.T) {
 	for _, tt := range normalTest {
 		t.Run("Normal", func(t *testing.T) {
 			s := &Step{
-				done: tt,
+				mutex: &sync.Mutex{},
+				done:  tt,
 			}
 			if (s.DoneProgress() == 1) != tt {
 				t.Error("Done progress status of step should be the same.")
@@ -257,6 +271,7 @@ func TestStepUndoneProgress(t *testing.T) {
 	for _, tt := range normalTest {
 		t.Run("Normal", func(t *testing.T) {
 			s := &Step{
+				mutex:  &sync.Mutex{},
 				undone: tt,
 			}
 			if (s.UndoneProgress() == 1) != tt {
@@ -279,6 +294,7 @@ func TestStepDoError(t *testing.T) {
 	for _, tt := range test {
 		t.Run("Normal", func(t *testing.T) {
 			s := &Step{
+				mutex: &sync.Mutex{},
 				done:  true,
 				doErr: tt,
 			}
@@ -292,6 +308,7 @@ func TestStepDoError(t *testing.T) {
 	for _, tt := range test {
 		t.Run("Non-done", func(t *testing.T) {
 			s := &Step{
+				mutex: &sync.Mutex{},
 				doErr: tt,
 			}
 			if err := s.DoError(); err != ErrStepNonDone {
@@ -311,6 +328,7 @@ func TestStepUndoError(t *testing.T) {
 	for _, tt := range test {
 		t.Run("Normal", func(t *testing.T) {
 			s := &Step{
+				mutex:   &sync.Mutex{},
 				undone:  true,
 				undoErr: tt,
 			}
@@ -324,6 +342,7 @@ func TestStepUndoError(t *testing.T) {
 	for _, tt := range test {
 		t.Run("Non-undone", func(t *testing.T) {
 			s := &Step{
+				mutex:   &sync.Mutex{},
 				undoErr: tt,
 			}
 			if err := s.UndoError(); err != ErrStepNonUndone {

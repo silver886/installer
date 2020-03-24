@@ -2,6 +2,7 @@ package installer
 
 import (
 	"errors"
+	"sync"
 	"testing"
 )
 
@@ -87,6 +88,7 @@ func TestStepsDo(t *testing.T) {
 	for _, tt := range test {
 		t.Run("Normal", func(t *testing.T) {
 			s := &Steps{
+				mutex:    &sync.Mutex{},
 				steppers: tt.steppers,
 			}
 			if err := s.Do(); err != tt.result && err.Error() != tt.result.Error() {
@@ -97,7 +99,9 @@ func TestStepsDo(t *testing.T) {
 
 	t.Log("Do an emtpy steps.")
 	t.Run("Emtpy", func(t *testing.T) {
-		s := &Steps{}
+		s := &Steps{
+			mutex: &sync.Mutex{},
+		}
 		if err := s.Do(); err != ErrStepsNoStepper {
 			t.Error("Steps should not be able to do.")
 		}
@@ -107,6 +111,7 @@ func TestStepsDo(t *testing.T) {
 	for _, tt := range test {
 		t.Run("Done", func(t *testing.T) {
 			s := &Steps{
+				mutex:    &sync.Mutex{},
 				steppers: tt.steppers,
 				done:     true,
 			}
@@ -154,6 +159,7 @@ func TestStepsUndo(t *testing.T) {
 	for _, tt := range test {
 		t.Run("Normal", func(t *testing.T) {
 			s := &Steps{
+				mutex:    &sync.Mutex{},
 				steppers: tt.steppers,
 			}
 			if err := s.Undo(); err != tt.result && err.Error() != tt.result.Error() {
@@ -164,7 +170,9 @@ func TestStepsUndo(t *testing.T) {
 
 	t.Log("Undo an emtpy steps.")
 	t.Run("Emtpy", func(t *testing.T) {
-		s := &Steps{}
+		s := &Steps{
+			mutex: &sync.Mutex{},
+		}
 		if err := s.Undo(); err != ErrStepsNoStepper {
 			t.Error("Steps should not be able to undo.")
 		}
@@ -174,6 +182,7 @@ func TestStepsUndo(t *testing.T) {
 	for _, tt := range test {
 		t.Run("Undone", func(t *testing.T) {
 			s := &Steps{
+				mutex:    &sync.Mutex{},
 				steppers: tt.steppers,
 				undone:   true,
 			}
@@ -193,7 +202,8 @@ func TestStepsDone(t *testing.T) {
 	for _, tt := range normalTest {
 		t.Run("Normal", func(t *testing.T) {
 			s := &Steps{
-				done: tt,
+				mutex: &sync.Mutex{},
+				done:  tt,
 			}
 			if s.Done() != tt {
 				t.Error("Done status of steps should be the same.")
@@ -211,6 +221,7 @@ func TestStepsUndone(t *testing.T) {
 	for _, tt := range normalTest {
 		t.Run("Normal", func(t *testing.T) {
 			s := &Steps{
+				mutex:  &sync.Mutex{},
 				undone: tt,
 			}
 			if s.Undone() != tt {
@@ -238,6 +249,7 @@ func TestStepsDoneStep(t *testing.T) {
 	for _, tt := range normalTest {
 		t.Run("Normal", func(t *testing.T) {
 			s := &Steps{
+				mutex:    &sync.Mutex{},
 				done:     tt.done,
 				doneStep: tt.step,
 			}
@@ -271,6 +283,7 @@ func TestStepsUndoneStep(t *testing.T) {
 	for _, tt := range normalTest {
 		t.Run("Normal", func(t *testing.T) {
 			s := &Steps{
+				mutex:      &sync.Mutex{},
 				undone:     tt.undone,
 				undoneStep: tt.step,
 			}
@@ -313,6 +326,7 @@ func TestStepsDoneProgress(t *testing.T) {
 	for _, tt := range normalTest {
 		t.Run("Normal", func(t *testing.T) {
 			s := &Steps{
+				mutex:    &sync.Mutex{},
 				steppers: tt.steppers,
 				done:     tt.done,
 				doneStep: tt.step,
@@ -359,6 +373,7 @@ func TestStepsUndoneProgress(t *testing.T) {
 	for _, tt := range normalTest {
 		t.Run("Normal", func(t *testing.T) {
 			s := &Steps{
+				mutex:      &sync.Mutex{},
 				steppers:   tt.steppers,
 				undone:     tt.undone,
 				undoneStep: tt.step,
@@ -414,6 +429,7 @@ func TestStepsDoError(t *testing.T) {
 	for _, tt := range test {
 		t.Run("Normal", func(t *testing.T) {
 			s := &Steps{
+				mutex:    &sync.Mutex{},
 				steppers: tt.steppers,
 				doneStep: tt.step,
 			}
@@ -429,6 +445,7 @@ func TestStepsDoError(t *testing.T) {
 	for _, tt := range test {
 		t.Run("Non-done", func(t *testing.T) {
 			s := &Steps{
+				mutex:    &sync.Mutex{},
 				steppers: tt.steppers,
 				doneStep: tt.step,
 			}
@@ -479,6 +496,7 @@ func TestStepsUndoError(t *testing.T) {
 	for _, tt := range test {
 		t.Run("Normal", func(t *testing.T) {
 			s := &Steps{
+				mutex:      &sync.Mutex{},
 				steppers:   tt.steppers,
 				undoneStep: tt.step,
 			}
@@ -494,6 +512,7 @@ func TestStepsUndoError(t *testing.T) {
 	for _, tt := range test {
 		t.Run("Non-undone", func(t *testing.T) {
 			s := &Steps{
+				mutex:      &sync.Mutex{},
 				steppers:   tt.steppers,
 				undoneStep: tt.step,
 			}

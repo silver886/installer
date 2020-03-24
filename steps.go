@@ -1,5 +1,7 @@
 package installer
 
+import "sync"
+
 // Stepper implements methods that would used by installer steps.
 type Stepper interface {
 	Do() error
@@ -17,9 +19,13 @@ type Stepper interface {
 
 // Steps is the set of step.
 type Steps struct {
-	steppers   []Stepper
-	done       bool
-	doneStep   int
+	mutex *sync.Mutex
+
+	steppers []Stepper
+
+	done     bool
+	doneStep int
+
 	undone     bool
 	undoneStep int
 }
@@ -27,12 +33,15 @@ type Steps struct {
 // NewSteps creates a set of steppers with given steppers.
 func NewSteps(steppers []Stepper) *Steps {
 	return &Steps{
+		mutex:    &sync.Mutex{},
 		steppers: steppers,
 	}
 }
 
 // Do triggers each steppers' doer.
 func (s *Steps) Do() error {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
 	if err := s.checkSteppers(); err != nil {
 		return err
 	}
@@ -51,6 +60,8 @@ func (s *Steps) Do() error {
 
 // Undo triggers each steppers' undoer.
 func (s *Steps) Undo() error {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
 	if err := s.checkSteppers(); err != nil {
 		return err
 	}

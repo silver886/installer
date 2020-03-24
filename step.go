@@ -1,7 +1,11 @@
 package installer
 
+import "sync"
+
 // Step is the basic component of a doer.
 type Step struct {
+	mutex *sync.Mutex
+
 	doer  func() error
 	doErr error
 	done  bool
@@ -14,6 +18,7 @@ type Step struct {
 // NewStep creates step with doer and undoer.
 func NewStep(doer func() error, undoer func() error) *Step {
 	return &Step{
+		mutex:  &sync.Mutex{},
 		doer:   doer,
 		undoer: undoer,
 	}
@@ -21,6 +26,8 @@ func NewStep(doer func() error, undoer func() error) *Step {
 
 // Do triggers the doer.
 func (s *Step) Do() error {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
 	if err := s.checkDoer(); err != nil {
 		return err
 	}
@@ -36,6 +43,8 @@ func (s *Step) Do() error {
 
 // Undo triggers the undoer.
 func (s *Step) Undo() error {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
 	if err := s.checkUndoer(); err != nil {
 		return err
 	}
