@@ -8,11 +8,11 @@ type Step struct {
 
 	doer  func() error
 	doErr error
-	done  bool
 
 	undoer  func() error
 	undoErr error
-	undone  bool
+
+	step int
 }
 
 // NewStep creates step with doer and undoer.
@@ -29,9 +29,8 @@ func (s *Step) Reset() {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 	s.doErr = nil
-	s.done = false
 	s.undoErr = nil
-	s.undone = false
+	s.step = 0
 }
 
 // Do triggers the doer.
@@ -41,11 +40,11 @@ func (s *Step) Do() error {
 	if err := s.checkDoer(); err != nil {
 		return err
 	}
-	if s.done {
-		return ErrStepDone
+	if s.step != 0 {
+		return ErrStepExecuted
 	}
-	defer func() { s.done = true }()
 	s.doErr = s.doer()
+	s.step++
 	if s.doErr != nil {
 		return s.doErr
 	}
@@ -59,11 +58,11 @@ func (s *Step) Undo() error {
 	if err := s.checkUndoer(); err != nil {
 		return err
 	}
-	if s.undone {
-		return ErrStepUndone
+	if s.step != 0 {
+		return ErrStepExecuted
 	}
-	defer func() { s.undone = true }()
 	s.undoErr = s.undoer()
+	s.step--
 	if s.undoErr != nil {
 		return s.undoErr
 	}
@@ -72,49 +71,49 @@ func (s *Step) Undo() error {
 
 // Done retuen the status of doer.
 func (s *Step) Done() bool {
-	return s.done
+	return s.step > 0
 }
 
 // Undone retuen the status of undoer.
 func (s *Step) Undone() bool {
-	return s.undone
+	return s.step < 0
 }
 
 // DoneStep retuen the step status of doer.
 func (s *Step) DoneStep() int {
-	if s.done {
-		return 1
+	if s.step <= 0 {
+		return 0
 	}
-	return 0
+	return 1
 }
 
 // UndoneStep retuen the step status of undoer.
 func (s *Step) UndoneStep() int {
-	if s.undone {
-		return 1
+	if s.step >= 0 {
+		return 0
 	}
-	return 0
+	return 1
 }
 
 // DoneProgress retuen the progress status of doer.
 func (s *Step) DoneProgress() float64 {
-	if s.done {
-		return 1
+	if s.step <= 0 {
+		return 0
 	}
-	return 0
+	return 1
 }
 
 // UndoneProgress retuen the progress status of undoer.
 func (s *Step) UndoneProgress() float64 {
-	if s.undone {
-		return 1
+	if s.step >= 0 {
+		return 0
 	}
-	return 0
+	return 1
 }
 
 // DoError retuen the error during doing action.
 func (s *Step) DoError() error {
-	if !s.done {
+	if s.step <= 0 {
 		return ErrStepNonDone
 	}
 	return s.doErr
@@ -122,7 +121,7 @@ func (s *Step) DoError() error {
 
 // UndoError retuen the error during undoing action.
 func (s *Step) UndoError() error {
-	if !s.undone {
+	if s.step >= 0 {
 		return ErrStepNonUndone
 	}
 	return s.undoErr
