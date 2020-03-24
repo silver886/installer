@@ -4,8 +4,8 @@ import "errors"
 
 var (
 
-	// ErrStepsNoStepper means the steps does not have any stapper.
-	ErrStepsNoStepper = errors.New("Steps has no stapper")
+	// ErrStepsNoStepper means the steps does not have any stepper.
+	ErrStepsNoStepper = errors.New("Steps has no stepper")
 	// ErrStepsExecuted means the steps is already executed.
 	ErrStepsExecuted = errors.New("Steps is already executed")
 	// ErrStepsNonDone means the steps is not done.
