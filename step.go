@@ -24,6 +24,16 @@ func NewStep(doer func() error, undoer func() error) *Step {
 	}
 }
 
+// Reset clears the status.
+func (s *Step) Reset() {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+	s.doErr = nil
+	s.done = false
+	s.undoErr = nil
+	s.undone = false
+}
+
 // Do triggers the doer.
 func (s *Step) Do() error {
 	s.mutex.Lock()

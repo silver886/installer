@@ -15,6 +15,8 @@ type Stepper interface {
 	Undone() bool
 	UndoneStep() int
 	UndoneProgress() float64
+
+	Reset()
 }
 
 // Steps is the set of step.
@@ -36,6 +38,19 @@ func NewSteps(steppers []Stepper) *Steps {
 		mutex:    &sync.Mutex{},
 		steppers: steppers,
 	}
+}
+
+// Reset clears the status.
+func (s *Steps) Reset() {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+	for _, ss := range s.steppers {
+		ss.Reset()
+	}
+	s.done = false
+	s.doneStep = 0
+	s.undone = false
+	s.undoneStep = 0
 }
 
 // Do triggers each steppers' doer.

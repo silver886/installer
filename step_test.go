@@ -54,6 +54,37 @@ func TestStepNew(t *testing.T) {
 	}
 }
 
+func TestStepReset(t *testing.T) {
+	var test = []struct {
+		doer   func() error
+		result error
+	}{
+		{
+			doer:   func() error { return nil },
+			result: nil,
+		},
+		{
+			doer:   func() error { return errors.New("") },
+			result: errors.New(""),
+		},
+	}
+
+	t.Log("Redo a step.")
+	for _, tt := range test {
+		t.Run("Normal", func(t *testing.T) {
+			s := &Step{
+				mutex: &sync.Mutex{},
+				doer:  tt.doer,
+			}
+			s.Do()
+			s.Reset()
+			if err := s.Do(); err != tt.result && err.Error() != tt.result.Error() {
+				t.Error("Step should be able to redo.")
+			}
+		})
+	}
+}
+
 func TestStepDo(t *testing.T) {
 	var test = []struct {
 		doer   func() error

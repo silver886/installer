@@ -51,6 +51,55 @@ func TestStepsNew(t *testing.T) {
 	}
 }
 
+func TestStepsReset(t *testing.T) {
+	var test = []struct {
+		steppers []Stepper
+		result   error
+	}{
+		{
+			steppers: []Stepper{
+				NewStep(
+					func() error { return nil },
+					func() error { return nil },
+				),
+				NewStep(
+					func() error { return nil },
+					func() error { return nil },
+				),
+			},
+			result: nil,
+		},
+		{
+			steppers: []Stepper{
+				NewStep(
+					func() error { return nil },
+					func() error { return errors.New("") },
+				),
+				NewStep(
+					func() error { return errors.New("") },
+					func() error { return nil },
+				),
+			},
+			result: errors.New(""),
+		},
+	}
+
+	t.Log("Normally do a steps.")
+	for _, tt := range test {
+		t.Run("Normal", func(t *testing.T) {
+			s := &Steps{
+				mutex:    &sync.Mutex{},
+				steppers: tt.steppers,
+			}
+			s.Do()
+			s.Reset()
+			if err := s.Do(); err != tt.result && err.Error() != tt.result.Error() {
+				t.Error("Steps should be able to do.")
+			}
+		})
+	}
+}
+
 func TestStepsDo(t *testing.T) {
 	var test = []struct {
 		steppers []Stepper
