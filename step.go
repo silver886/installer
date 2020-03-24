@@ -12,17 +12,11 @@ type Step struct {
 }
 
 // NewStep creates step with doer and undoer.
-func NewStep(doer func() error, undoer func() error) (*Step, error) {
-	s := &Step{
+func NewStep(doer func() error, undoer func() error) *Step {
+	return &Step{
 		doer:   doer,
 		undoer: undoer,
 	}
-	if err := s.checkDoer(); err != nil {
-		return nil, err
-	} else if err := s.checkUndoer(); err != nil {
-		return nil, err
-	}
-	return s, nil
 }
 
 // Do triggers the doer.

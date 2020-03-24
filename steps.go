@@ -25,14 +25,10 @@ type Steps struct {
 }
 
 // NewSteps creates a set of steppers with given steppers.
-func NewSteps(steppers []Stepper) (*Steps, error) {
-	s := &Steps{
+func NewSteps(steppers []Stepper) *Steps {
+	return &Steps{
 		steppers: steppers,
 	}
-	if err := s.checkSteppers(); err != nil {
-		return nil, err
-	}
-	return s, nil
 }
 
 // Do triggers each steppers' doer.

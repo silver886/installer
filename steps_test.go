@@ -5,75 +5,46 @@ import (
 	"testing"
 )
 
-func TestStepssNew(t *testing.T) {
+func TestStepsNew(t *testing.T) {
 	t.Log("Normally create a steps.")
 	var normalTest = [][]Stepper{
 		{
-			func() *Step {
-				s, _ := NewStep(
-					func() error { return nil },
-					func() error { return nil },
-				)
-				return s
-			}(),
-			func() *Step {
-				s, _ := NewStep(
-					func() error { return nil },
-					func() error { return nil },
-				)
-				return s
-			}(),
+			NewStep(
+				func() error { return nil },
+				func() error { return nil },
+			),
+			NewStep(
+				func() error { return nil },
+				func() error { return nil },
+			),
 		},
 		{
-			func() *Step {
-				s, _ := NewStep(
-					func() error { return errors.New("") },
-					func() error { return nil },
-				)
-				return s
-			}(),
-			func() *Step {
-				s, _ := NewStep(
-					func() error { return nil },
-					func() error { return errors.New("") },
-				)
-				return s
-			}(),
+			NewStep(
+				func() error { return errors.New("") },
+				func() error { return nil },
+			),
+			NewStep(
+				func() error { return nil },
+				func() error { return errors.New("") },
+			),
 		},
 		{
-			func() *Step {
-				s, _ := NewStep(
-					func() error { return errors.New("") },
-					func() error { return errors.New("") },
-				)
-				return s
-			}(),
-			func() *Step {
-				s, _ := NewStep(
-					func() error { return errors.New("") },
-					func() error { return errors.New("") },
-				)
-				return s
-			}(),
+			NewStep(
+				func() error { return errors.New("") },
+				func() error { return errors.New("") },
+			),
+			NewStep(
+				func() error { return errors.New("") },
+				func() error { return errors.New("") },
+			),
 		},
-	}
-	for _, tt := range normalTest {
-		t.Run("Normal", func(t *testing.T) {
-			if s, err := NewSteps(tt); s == nil || s.steppers == nil || len(s.steppers) == 0 || err != nil {
-				t.Error("Steps should be able to create.")
-			}
-		})
-	}
-
-	t.Log("Create a steps without steppers.")
-	var missingTest = [][]Stepper{
 		{},
 		nil,
 	}
-	for _, tt := range missingTest {
-		t.Run("Missing", func(t *testing.T) {
-			if s, err := NewSteps(tt); s != nil || err != ErrStepsNoStepper {
-				t.Error("Steps should not be able to create.")
+	for _, tt := range normalTest {
+		t.Run("Normal", func(t *testing.T) {
+			if s := NewSteps(tt); s == nil {
+				t.Error("Steps should be able to create.")
 			}
 		})
 	}
@@ -86,39 +57,27 @@ func TestStepsDo(t *testing.T) {
 	}{
 		{
 			steppers: []Stepper{
-				func() *Step {
-					s, _ := NewStep(
-						func() error { return nil },
-						func() error { return nil },
-					)
-					return s
-				}(),
-				func() *Step {
-					s, _ := NewStep(
-						func() error { return nil },
-						func() error { return nil },
-					)
-					return s
-				}(),
+				NewStep(
+					func() error { return nil },
+					func() error { return nil },
+				),
+				NewStep(
+					func() error { return nil },
+					func() error { return nil },
+				),
 			},
 			result: nil,
 		},
 		{
 			steppers: []Stepper{
-				func() *Step {
-					s, _ := NewStep(
-						func() error { return nil },
-						func() error { return errors.New("") },
-					)
-					return s
-				}(),
-				func() *Step {
-					s, _ := NewStep(
-						func() error { return errors.New("") },
-						func() error { return nil },
-					)
-					return s
-				}(),
+				NewStep(
+					func() error { return nil },
+					func() error { return errors.New("") },
+				),
+				NewStep(
+					func() error { return errors.New("") },
+					func() error { return nil },
+				),
 			},
 			result: errors.New(""),
 		},
@@ -165,39 +124,27 @@ func TestStepsUndo(t *testing.T) {
 	}{
 		{
 			steppers: []Stepper{
-				func() *Step {
-					s, _ := NewStep(
-						func() error { return nil },
-						func() error { return nil },
-					)
-					return s
-				}(),
-				func() *Step {
-					s, _ := NewStep(
-						func() error { return nil },
-						func() error { return nil },
-					)
-					return s
-				}(),
+				NewStep(
+					func() error { return nil },
+					func() error { return nil },
+				),
+				NewStep(
+					func() error { return nil },
+					func() error { return nil },
+				),
 			},
 			result: nil,
 		},
 		{
 			steppers: []Stepper{
-				func() *Step {
-					s, _ := NewStep(
-						func() error { return nil },
-						func() error { return errors.New("") },
-					)
-					return s
-				}(),
-				func() *Step {
-					s, _ := NewStep(
-						func() error { return errors.New("") },
-						func() error { return nil },
-					)
-					return s
-				}(),
+				NewStep(
+					func() error { return nil },
+					func() error { return errors.New("") },
+				),
+				NewStep(
+					func() error { return errors.New("") },
+					func() error { return nil },
+				),
 			},
 			result: errors.New(""),
 		},
@@ -419,40 +366,28 @@ func TestStepsDoError(t *testing.T) {
 	}{
 		{
 			steppers: []Stepper{
-				func() *Step {
-					s, _ := NewStep(
-						func() error { return nil },
-						func() error { return nil },
-					)
-					return s
-				}(),
-				func() *Step {
-					s, _ := NewStep(
-						func() error { return nil },
-						func() error { return nil },
-					)
-					return s
-				}(),
+				NewStep(
+					func() error { return nil },
+					func() error { return nil },
+				),
+				NewStep(
+					func() error { return nil },
+					func() error { return nil },
+				),
 			},
 			step:   0,
 			result: nil,
 		},
 		{
 			steppers: []Stepper{
-				func() *Step {
-					s, _ := NewStep(
-						func() error { return nil },
-						func() error { return errors.New("") },
-					)
-					return s
-				}(),
-				func() *Step {
-					s, _ := NewStep(
-						func() error { return errors.New("") },
-						func() error { return nil },
-					)
-					return s
-				}(),
+				NewStep(
+					func() error { return nil },
+					func() error { return errors.New("") },
+				),
+				NewStep(
+					func() error { return errors.New("") },
+					func() error { return nil },
+				),
 			},
 			step:   1,
 			result: errors.New(""),
@@ -496,40 +431,28 @@ func TestStepsUndoError(t *testing.T) {
 	}{
 		{
 			steppers: []Stepper{
-				func() *Step {
-					s, _ := NewStep(
-						func() error { return nil },
-						func() error { return nil },
-					)
-					return s
-				}(),
-				func() *Step {
-					s, _ := NewStep(
-						func() error { return nil },
-						func() error { return nil },
-					)
-					return s
-				}(),
+				NewStep(
+					func() error { return nil },
+					func() error { return nil },
+				),
+				NewStep(
+					func() error { return nil },
+					func() error { return nil },
+				),
 			},
 			step:   0,
 			result: nil,
 		},
 		{
 			steppers: []Stepper{
-				func() *Step {
-					s, _ := NewStep(
-						func() error { return nil },
-						func() error { return errors.New("") },
-					)
-					return s
-				}(),
-				func() *Step {
-					s, _ := NewStep(
-						func() error { return errors.New("") },
-						func() error { return nil },
-					)
-					return s
-				}(),
+				NewStep(
+					func() error { return nil },
+					func() error { return errors.New("") },
+				),
+				NewStep(
+					func() error { return errors.New("") },
+					func() error { return nil },
+				),
 			},
 			step:   0,
 			result: errors.New(""),

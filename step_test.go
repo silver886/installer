@@ -6,7 +6,7 @@ import (
 )
 
 func TestStepNew(t *testing.T) {
-	t.Log("Normally create a step.")
+	t.Log("Create a step.")
 	var normalTest = []struct {
 		a func() error
 		b func() error
@@ -27,41 +27,27 @@ func TestStepNew(t *testing.T) {
 			func() error { return errors.New("") },
 			func() error { return errors.New("") },
 		},
+		{
+			nil,
+			func() error { return nil },
+		},
+		{
+			nil,
+			func() error { return errors.New("") },
+		},
+		{
+			func() error { return nil },
+			nil,
+		},
+		{
+			func() error { return errors.New("") },
+			nil,
+		},
 	}
 	for _, tt := range normalTest {
 		t.Run("Normal", func(t *testing.T) {
-			if s, err := NewStep(tt.a, tt.b); s == nil || s.doer == nil || s.undoer == nil || err != nil {
+			if s := NewStep(tt.a, tt.b); s == nil {
 				t.Error("Step should be able to create.")
-			}
-		})
-	}
-
-	t.Log("Create a step without doer or undoer.")
-	var missingTest = []struct {
-		a func() error
-		b func() error
-	}{
-		{
-			nil,
-			func() error { return nil },
-		},
-		{
-			nil,
-			func() error { return errors.New("") },
-		},
-		{
-			func() error { return nil },
-			nil,
-		},
-		{
-			func() error { return errors.New("") },
-			nil,
-		},
-	}
-	for _, tt := range missingTest {
-		t.Run("Missing", func(t *testing.T) {
-			if s, err := NewStep(tt.a, tt.b); s != nil || (err != ErrStepNoDoer && err != ErrStepNoUndoer) {
-				t.Error("Step should not be able to create.")
 			}
 		})
 	}
