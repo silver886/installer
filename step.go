@@ -44,7 +44,8 @@ func (s *Step) Do() error {
 	if s.done {
 		return ErrStepDone
 	}
-	s.doErr, s.done = s.doer(), true
+	defer func() { s.done = true }()
+	s.doErr = s.doer()
 	if s.doErr != nil {
 		return s.doErr
 	}
@@ -61,7 +62,8 @@ func (s *Step) Undo() error {
 	if s.undone {
 		return ErrStepUndone
 	}
-	s.undoErr, s.undone = s.undoer(), true
+	defer func() { s.undone = true }()
+	s.undoErr = s.undoer()
 	if s.undoErr != nil {
 		return s.undoErr
 	}

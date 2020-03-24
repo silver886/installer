@@ -63,7 +63,7 @@ func (s *Steps) Do() error {
 	if s.done {
 		return ErrStepsDone
 	}
-	s.done = true
+	defer func() { s.done = true }()
 	for i, ss := range s.steppers {
 		s.doneStep = i
 		if err := ss.Do(); err != nil {
@@ -83,7 +83,7 @@ func (s *Steps) Undo() error {
 	if s.undone {
 		return ErrStepsUndone
 	}
-	s.undone = true
+	defer func() { s.undone = true }()
 	for i, ss := range s.steppers {
 		s.undoneStep = i
 		if err := ss.Undo(); err != nil {
