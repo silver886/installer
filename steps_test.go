@@ -162,9 +162,9 @@ func TestStepsDo(t *testing.T) {
 			s := &Steps{
 				mutex:    &sync.Mutex{},
 				steppers: tt.steppers,
-				done:     true,
+				step:     1,
 			}
-			if err := s.Do(); err != ErrStepsDone {
+			if err := s.Do(); err != ErrStepsExecuted {
 				t.Error("Steps should not be able to do.")
 			}
 		})
@@ -233,9 +233,9 @@ func TestStepsUndo(t *testing.T) {
 			s := &Steps{
 				mutex:    &sync.Mutex{},
 				steppers: tt.steppers,
-				undone:   true,
+				step:     -1,
 			}
-			if err := s.Undo(); err != ErrStepsUndone {
+			if err := s.Undo(); err != ErrStepsExecuted {
 				t.Error("Steps should not be able to undo.")
 			}
 		})
@@ -244,17 +244,35 @@ func TestStepsUndo(t *testing.T) {
 
 func TestStepsDone(t *testing.T) {
 	t.Log("Get done status.")
-	var normalTest = []bool{
-		true,
-		false,
+	var normalTest = []struct {
+		steppers []Stepper
+		step     int
+	}{
+		{
+			steppers: []Stepper{nil, nil, nil, nil, nil},
+			step:     0,
+		},
+		{
+			steppers: []Stepper{nil, nil, nil, nil, nil},
+			step:     3,
+		},
+		{
+			steppers: []Stepper{nil, nil, nil, nil, nil},
+			step:     5,
+		},
+		{
+			steppers: []Stepper{nil, nil, nil, nil, nil},
+			step:     -3,
+		},
 	}
 	for _, tt := range normalTest {
 		t.Run("Normal", func(t *testing.T) {
 			s := &Steps{
-				mutex: &sync.Mutex{},
-				done:  tt,
+				mutex:    &sync.Mutex{},
+				steppers: tt.steppers,
+				step:     tt.step,
 			}
-			if s.Done() != tt {
+			if s.Done() != (tt.step == len(tt.steppers)) {
 				t.Error("Done status of steps should be the same.")
 			}
 		})
@@ -263,17 +281,35 @@ func TestStepsDone(t *testing.T) {
 
 func TestStepsUndone(t *testing.T) {
 	t.Log("Get undone status.")
-	var normalTest = []bool{
-		true,
-		false,
+	var normalTest = []struct {
+		steppers []Stepper
+		step     int
+	}{
+		{
+			steppers: []Stepper{nil, nil, nil, nil, nil},
+			step:     0,
+		},
+		{
+			steppers: []Stepper{nil, nil, nil, nil, nil},
+			step:     -3,
+		},
+		{
+			steppers: []Stepper{nil, nil, nil, nil, nil},
+			step:     -5,
+		},
+		{
+			steppers: []Stepper{nil, nil, nil, nil, nil},
+			step:     3,
+		},
 	}
 	for _, tt := range normalTest {
 		t.Run("Normal", func(t *testing.T) {
 			s := &Steps{
-				mutex:  &sync.Mutex{},
-				undone: tt,
+				mutex:    &sync.Mutex{},
+				steppers: tt.steppers,
+				step:     tt.step,
 			}
-			if s.Undone() != tt {
+			if s.Undone() != (tt.step == -len(tt.steppers)) {
 				t.Error("Undone status of steps should be the same.")
 			}
 		})
@@ -283,28 +319,43 @@ func TestStepsUndone(t *testing.T) {
 func TestStepsDoneStep(t *testing.T) {
 	t.Log("Get done step status.")
 	var normalTest = []struct {
-		done bool
-		step int
+		steppers []Stepper
+		step     int
 	}{
 		{
-			done: true,
-			step: 3,
+			steppers: []Stepper{nil, nil, nil, nil, nil},
+			step:     0,
 		},
 		{
-			done: false,
-			step: 3,
+			steppers: []Stepper{nil, nil, nil, nil, nil},
+			step:     3,
+		},
+		{
+			steppers: []Stepper{nil, nil, nil, nil, nil},
+			step:     5,
+		},
+		{
+			steppers: []Stepper{nil, nil, nil, nil, nil},
+			step:     -3,
+		},
+		{
+			steppers: []Stepper{},
+			step:     3,
 		},
 	}
 	for _, tt := range normalTest {
 		t.Run("Normal", func(t *testing.T) {
 			s := &Steps{
 				mutex:    &sync.Mutex{},
-				done:     tt.done,
-				doneStep: tt.step,
+				steppers: tt.steppers,
+				step:     tt.step,
 			}
-			if !tt.done && s.DoneStep() != 0 ||
-				tt.done && s.DoneStep() != tt.step {
+			if (tt.step <= 0 || s.checkSteppers() != nil) && s.DoneStep() > 0 ||
+				tt.step > 0 && s.checkSteppers() == nil && s.DoneStep() != tt.step {
 				t.Error("Done step status should be the same.")
+			}
+			if s.DoneStep() < 0 {
+				t.Error("Done step should be non-negative.")
 			}
 		})
 	}
@@ -313,32 +364,43 @@ func TestStepsDoneStep(t *testing.T) {
 func TestStepsUndoneStep(t *testing.T) {
 	t.Log("Get undone step status.")
 	var normalTest = []struct {
-		undone bool
-		step   int
+		steppers []Stepper
+		step     int
 	}{
 		{
-			undone: true,
-			step:   3,
+			steppers: []Stepper{nil, nil, nil, nil, nil},
+			step:     0,
 		},
 		{
-			undone: true,
-			step:   5,
+			steppers: []Stepper{nil, nil, nil, nil, nil},
+			step:     -3,
 		},
 		{
-			undone: false,
-			step:   3,
+			steppers: []Stepper{nil, nil, nil, nil, nil},
+			step:     -5,
+		},
+		{
+			steppers: []Stepper{nil, nil, nil, nil, nil},
+			step:     3,
+		},
+		{
+			steppers: []Stepper{},
+			step:     -3,
 		},
 	}
 	for _, tt := range normalTest {
 		t.Run("Normal", func(t *testing.T) {
 			s := &Steps{
-				mutex:      &sync.Mutex{},
-				undone:     tt.undone,
-				undoneStep: tt.step,
+				mutex:    &sync.Mutex{},
+				steppers: tt.steppers,
+				step:     tt.step,
 			}
-			if !tt.undone && s.UndoneStep() != 0 ||
-				tt.undone && s.UndoneStep() != tt.step {
+			if (tt.step >= 0 || s.checkSteppers() != nil) && s.UndoneStep() > 0 ||
+				tt.step < 0 && s.checkSteppers() == nil && s.UndoneStep() != -tt.step {
 				t.Error("Undone step status should be the same.")
+			}
+			if s.UndoneStep() < 0 {
+				t.Error("Undone step should be non-negative.")
 			}
 		})
 	}
@@ -348,27 +410,26 @@ func TestStepsDoneProgress(t *testing.T) {
 	t.Log("Get done progress status.")
 	var normalTest = []struct {
 		steppers []Stepper
-		done     bool
 		step     int
 	}{
 		{
 			steppers: []Stepper{nil, nil, nil, nil, nil},
-			done:     true,
+			step:     0,
+		},
+		{
+			steppers: []Stepper{nil, nil, nil, nil, nil},
 			step:     3,
 		},
 		{
 			steppers: []Stepper{nil, nil, nil, nil, nil},
-			done:     true,
 			step:     5,
 		},
 		{
 			steppers: []Stepper{nil, nil, nil, nil, nil},
-			done:     false,
-			step:     3,
+			step:     -3,
 		},
 		{
 			steppers: []Stepper{},
-			done:     true,
 			step:     3,
 		},
 	}
@@ -377,11 +438,10 @@ func TestStepsDoneProgress(t *testing.T) {
 			s := &Steps{
 				mutex:    &sync.Mutex{},
 				steppers: tt.steppers,
-				done:     tt.done,
-				doneStep: tt.step,
+				step:     tt.step,
 			}
-			if !tt.done && s.DoneProgress() != 0 ||
-				tt.done && s.DoneProgress() != float64(tt.step)/float64(len(tt.steppers)) && s.checkSteppers() == nil {
+			if (tt.step <= 0 || s.checkSteppers() != nil) && s.DoneProgress() > 0 ||
+				tt.step > 0 && s.checkSteppers() == nil && s.DoneProgress() != float64(tt.step)/float64(len(tt.steppers)) {
 				t.Error("Done progress status of steps should be the same.")
 			}
 			if s.DoneProgress() < 0 || s.DoneProgress() > 1 {
@@ -395,40 +455,38 @@ func TestStepsUndoneProgress(t *testing.T) {
 	t.Log("Get undone progress status.")
 	var normalTest = []struct {
 		steppers []Stepper
-		undone   bool
 		step     int
 	}{
 		{
 			steppers: []Stepper{nil, nil, nil, nil, nil},
-			undone:   true,
-			step:     3,
+			step:     0,
 		},
 		{
 			steppers: []Stepper{nil, nil, nil, nil, nil},
-			undone:   true,
-			step:     5,
+			step:     -3,
 		},
 		{
 			steppers: []Stepper{nil, nil, nil, nil, nil},
-			undone:   false,
+			step:     -5,
+		},
+		{
+			steppers: []Stepper{nil, nil, nil, nil, nil},
 			step:     3,
 		},
 		{
 			steppers: []Stepper{},
-			undone:   true,
-			step:     3,
+			step:     -3,
 		},
 	}
 	for _, tt := range normalTest {
 		t.Run("Normal", func(t *testing.T) {
 			s := &Steps{
-				mutex:      &sync.Mutex{},
-				steppers:   tt.steppers,
-				undone:     tt.undone,
-				undoneStep: tt.step,
+				mutex:    &sync.Mutex{},
+				steppers: tt.steppers,
+				step:     tt.step,
 			}
-			if !tt.undone && s.UndoneProgress() != 0 ||
-				tt.undone && s.UndoneProgress() != float64(tt.step)/float64(len(tt.steppers)) && s.checkSteppers() == nil {
+			if (tt.step >= 0 || s.checkSteppers() != nil) && s.UndoneProgress() > 0 ||
+				tt.step < 0 && s.checkSteppers() == nil && s.UndoneProgress() != float64(-tt.step)/float64(len(tt.steppers)) {
 				t.Error("Undone progress status of steps should be the same.")
 			}
 			if s.UndoneProgress() < 0 || s.UndoneProgress() > 1 {
@@ -480,7 +538,6 @@ func TestStepsDoError(t *testing.T) {
 			s := &Steps{
 				mutex:    &sync.Mutex{},
 				steppers: tt.steppers,
-				doneStep: tt.step,
 			}
 			s.Do()
 			if err := s.DoError(); err != tt.steppers[tt.step].DoError() &&
@@ -496,7 +553,6 @@ func TestStepsDoError(t *testing.T) {
 			s := &Steps{
 				mutex:    &sync.Mutex{},
 				steppers: tt.steppers,
-				doneStep: tt.step,
 			}
 			if err := s.DoError(); err != ErrStepsNonDone {
 				t.Error("Do error should not be able to get.")
@@ -545,9 +601,8 @@ func TestStepsUndoError(t *testing.T) {
 	for _, tt := range test {
 		t.Run("Normal", func(t *testing.T) {
 			s := &Steps{
-				mutex:      &sync.Mutex{},
-				steppers:   tt.steppers,
-				undoneStep: tt.step,
+				mutex:    &sync.Mutex{},
+				steppers: tt.steppers,
 			}
 			s.Undo()
 			if err := s.UndoError(); err != tt.steppers[tt.step].UndoError() &&
@@ -561,9 +616,8 @@ func TestStepsUndoError(t *testing.T) {
 	for _, tt := range test {
 		t.Run("Non-undone", func(t *testing.T) {
 			s := &Steps{
-				mutex:      &sync.Mutex{},
-				steppers:   tt.steppers,
-				undoneStep: tt.step,
+				mutex:    &sync.Mutex{},
+				steppers: tt.steppers,
 			}
 			if err := s.UndoError(); err != ErrStepsNonUndone {
 				t.Error("Undo error should not be able to get.")

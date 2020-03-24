@@ -5,14 +5,13 @@ import "sync"
 // Step is the basic component of a doer.
 type Step struct {
 	mutex *sync.Mutex
+	step  int
 
 	doer  func() error
 	doErr error
 
 	undoer  func() error
 	undoErr error
-
-	step int
 }
 
 // NewStep creates step with doer and undoer.
@@ -71,12 +70,12 @@ func (s *Step) Undo() error {
 
 // Done retuen the status of doer.
 func (s *Step) Done() bool {
-	return s.step > 0
+	return s.step == 1
 }
 
 // Undone retuen the status of undoer.
 func (s *Step) Undone() bool {
-	return s.step < 0
+	return s.step == -1
 }
 
 // DoneStep retuen the step status of doer.
@@ -84,7 +83,7 @@ func (s *Step) DoneStep() int {
 	if s.step <= 0 {
 		return 0
 	}
-	return 1
+	return s.step
 }
 
 // UndoneStep retuen the step status of undoer.
@@ -92,7 +91,7 @@ func (s *Step) UndoneStep() int {
 	if s.step >= 0 {
 		return 0
 	}
-	return 1
+	return -s.step
 }
 
 // DoneProgress retuen the progress status of doer.

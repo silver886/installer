@@ -21,15 +21,9 @@ type Stepper interface {
 
 // Steps is the set of steppers.
 type Steps struct {
-	mutex *sync.Mutex
-
+	mutex    *sync.Mutex
+	step     int
 	steppers []Stepper
-
-	done     bool
-	doneStep int
-
-	undone     bool
-	undoneStep int
 }
 
 // NewSteps creates a set of steppers with given steppers.
@@ -47,10 +41,7 @@ func (s *Steps) Reset() {
 	for _, ss := range s.steppers {
 		ss.Reset()
 	}
-	s.done = false
-	s.doneStep = 0
-	s.undone = false
-	s.undoneStep = 0
+	s.step = 0
 }
 
 // Do triggers each steppers' doer.
@@ -60,12 +51,11 @@ func (s *Steps) Do() error {
 	if err := s.checkSteppers(); err != nil {
 		return err
 	}
-	if s.done {
-		return ErrStepsDone
+	if s.step != 0 {
+		return ErrStepsExecuted
 	}
-	defer func() { s.done = true }()
-	for i, ss := range s.steppers {
-		s.doneStep = i
+	for _, ss := range s.steppers {
+		s.step++
 		if err := ss.Do(); err != nil {
 			return err
 		}
@@ -80,12 +70,11 @@ func (s *Steps) Undo() error {
 	if err := s.checkSteppers(); err != nil {
 		return err
 	}
-	if s.undone {
-		return ErrStepsUndone
+	if s.step != 0 {
+		return ErrStepsExecuted
 	}
-	defer func() { s.undone = true }()
-	for i, ss := range s.steppers {
-		s.undoneStep = i
+	for _, ss := range s.steppers {
+		s.step--
 		if err := ss.Undo(); err != nil {
 			return err
 		}
@@ -95,60 +84,60 @@ func (s *Steps) Undo() error {
 
 // Done retuen the status of doer.
 func (s *Steps) Done() bool {
-	return s.done
+	return s.step == len(s.steppers)
 }
 
 // Undone retuen the status of undoer.
 func (s *Steps) Undone() bool {
-	return s.undone
+	return s.step == -len(s.steppers)
 }
 
 // DoneStep retuen the step status of doer.
 func (s *Steps) DoneStep() int {
-	if s.done {
-		return s.doneStep
+	if err := s.checkSteppers(); err != nil || s.step <= 0 {
+		return 0
 	}
-	return 0
+	return s.step
 }
 
 // UndoneStep retuen the step status of undoer.
 func (s *Steps) UndoneStep() int {
-	if s.undone {
-		return s.undoneStep
+	if err := s.checkSteppers(); err != nil || s.step >= 0 {
+		return 0
 	}
-	return 0
+	return -s.step
 }
 
 // DoneProgress retuen the progress status of doer.
 func (s *Steps) DoneProgress() float64 {
-	if err := s.checkSteppers(); err != nil || !s.done {
+	if err := s.checkSteppers(); err != nil || s.step <= 0 {
 		return 0
 	}
-	return float64(s.doneStep) / float64(len(s.steppers))
+	return float64(s.step) / float64(len(s.steppers))
 }
 
 // UndoneProgress retuen the progress status of undoer.
 func (s *Steps) UndoneProgress() float64 {
-	if err := s.checkSteppers(); err != nil || !s.undone {
+	if err := s.checkSteppers(); err != nil || s.step >= 0 {
 		return 0
 	}
-	return float64(s.undoneStep) / float64(len(s.steppers))
+	return float64(-s.step) / float64(len(s.steppers))
 }
 
 // DoError retuen the error during doing steppers.
 func (s *Steps) DoError() error {
-	if !s.done {
+	if s.step <= 0 {
 		return ErrStepsNonDone
 	}
-	return s.steppers[s.doneStep].DoError()
+	return s.steppers[s.step-1].DoError()
 }
 
 // UndoError retuen the error during undoing steppers.
 func (s *Steps) UndoError() error {
-	if !s.undone {
+	if s.step >= 0 {
 		return ErrStepsNonUndone
 	}
-	return s.steppers[s.undoneStep].UndoError()
+	return s.steppers[-s.step-1].UndoError()
 }
 
 func (s *Steps) checkSteppers() error {

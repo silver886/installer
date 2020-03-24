@@ -6,14 +6,12 @@ var (
 
 	// ErrStepsNoStepper means the steps does not have any stapper.
 	ErrStepsNoStepper = errors.New("Steps has no stapper")
-	// ErrStepsNonDone means the steps had not been done.
+	// ErrStepsExecuted means the steps is already executed.
+	ErrStepsExecuted = errors.New("Steps is already executed")
+	// ErrStepsNonDone means the steps is not done.
 	ErrStepsNonDone = errors.New("Steps is not done")
-	// ErrStepsNonUndone means the steps had not been undone.
+	// ErrStepsNonUndone means the steps is not undone.
 	ErrStepsNonUndone = errors.New("Steps is not undone")
-	// ErrStepsDone means the steps had already done.
-	ErrStepsDone = errors.New("Steps is already done")
-	// ErrStepsUndone means the steps had already undone.
-	ErrStepsUndone = errors.New("Steps is already undone")
 
 	// ErrStepNoDoer means the step does not have doer.
 	ErrStepNoDoer = errors.New("Step has no doer")
