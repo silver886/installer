@@ -1,17 +1,18 @@
 package installer
 
-import "sync"
+import (
+	"math"
+	"sync"
+)
 
 // Step is the basic component of a doer.
 type Step struct {
 	mutex *sync.Mutex
 	step  int
+	err   error
 
-	doer  func() error
-	doErr error
-
-	undoer  func() error
-	undoErr error
+	doer   func() error
+	undoer func() error
 }
 
 // NewStep creates step with doer and undoer.
@@ -23,29 +24,20 @@ func NewStep(doer func() error, undoer func() error) *Step {
 	}
 }
 
-// Reset clears the status.
-func (s *Step) Reset() {
-	s.mutex.Lock()
-	defer s.mutex.Unlock()
-	s.doErr = nil
-	s.undoErr = nil
-	s.step = 0
-}
-
 // Do triggers the doer.
 func (s *Step) Do() error {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
-	if err := s.checkDoer(); err != nil {
-		return err
+	if s.doer == nil {
+		return ErrStepNoDoer
 	}
 	if s.step != 0 {
 		return ErrStepExecuted
 	}
-	s.doErr = s.doer()
+	s.err = s.doer()
 	s.step++
-	if s.doErr != nil {
-		return s.doErr
+	if s.err != nil {
+		return s.err
 	}
 	return nil
 }
@@ -54,88 +46,57 @@ func (s *Step) Do() error {
 func (s *Step) Undo() error {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
-	if err := s.checkUndoer(); err != nil {
-		return err
+	if s.undoer == nil {
+		return ErrStepNoUndoer
 	}
 	if s.step != 0 {
 		return ErrStepExecuted
 	}
-	s.undoErr = s.undoer()
+	s.err = s.undoer()
 	s.step--
-	if s.undoErr != nil {
-		return s.undoErr
+	if s.err != nil {
+		return s.err
 	}
 	return nil
 }
 
-// Done retuen the status of doer.
-func (s *Step) Done() bool {
-	return s.step == 1
-}
-
-// Undone retuen the status of undoer.
-func (s *Step) Undone() bool {
-	return s.step == -1
-}
-
-// DoneStep retuen the step status of doer.
-func (s *Step) DoneStep() int {
-	if s.step <= 0 {
-		return 0
+// Error return the error during executing action.
+func (s *Step) Error() error {
+	if s.step == 0 {
+		return ErrStepNotExecuted
 	}
-	return s.step
+	return s.err
 }
 
-// UndoneStep retuen the step status of undoer.
-func (s *Step) UndoneStep() int {
-	if s.step >= 0 {
-		return 0
+// Action return current action of step.
+func (s *Step) Action() int {
+	if s.step > 0 {
+		return 1
+	} else if s.step < 0 {
+		return -1
 	}
-	return -s.step
+	return 0
 }
 
-// DoneProgress retuen the progress status of doer.
-func (s *Step) DoneProgress() float64 {
-	if s.step <= 0 {
-		return 0
-	}
-	return 1
+// Fin return the status of step.
+func (s *Step) Fin() bool {
+	return math.Abs(float64(s.step)) == 1
 }
 
-// UndoneProgress retuen the progress status of undoer.
-func (s *Step) UndoneProgress() float64 {
-	if s.step >= 0 {
-		return 0
-	}
-	return 1
+// Step return the step status of step.
+func (s *Step) Step() int {
+	return int(math.Abs(float64(s.step)))
 }
 
-// DoError retuen the error during doing action.
-func (s *Step) DoError() error {
-	if s.step <= 0 {
-		return ErrStepNonDone
-	}
-	return s.doErr
+// Progress return the progress status of step.
+func (s *Step) Progress() float64 {
+	return math.Abs(float64(s.step))
 }
 
-// UndoError retuen the error during undoing action.
-func (s *Step) UndoError() error {
-	if s.step >= 0 {
-		return ErrStepNonUndone
-	}
-	return s.undoErr
-}
-
-func (s *Step) checkDoer() error {
-	if s.doer == nil {
-		return ErrStepNoDoer
-	}
-	return nil
-}
-
-func (s *Step) checkUndoer() error {
-	if s.undoer == nil {
-		return ErrStepNoUndoer
-	}
-	return nil
+// Reset clears the status.
+func (s *Step) Reset() {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+	s.err = nil
+	s.step = 0
 }

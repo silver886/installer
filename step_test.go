@@ -2,6 +2,7 @@ package installer
 
 import (
 	"errors"
+	"math"
 	"sync"
 	"testing"
 )
@@ -109,7 +110,7 @@ func TestStepDo(t *testing.T) {
 			}
 			if err := s.Do(); err != tt.result && err.Error() != tt.result.Error() {
 				t.Error("Step should be able to do.")
-			} else if err != nil && s.doErr.Error() != tt.result.Error() {
+			} else if err != nil && s.err.Error() != tt.result.Error() {
 				t.Error("Step should be have a same error internally.")
 			}
 		})
@@ -125,9 +126,9 @@ func TestStepDo(t *testing.T) {
 		}
 	})
 
-	t.Log("Do a done step.")
+	t.Log("Do a executed step.")
 	for _, tt := range test {
-		t.Run("Done", func(t *testing.T) {
+		t.Run("Executed", func(t *testing.T) {
 			s := &Step{
 				mutex: &sync.Mutex{},
 				doer:  tt.doer,
@@ -164,7 +165,7 @@ func TestStepUndo(t *testing.T) {
 			}
 			if err := s.Undo(); err != tt.result && err.Error() != tt.result.Error() {
 				t.Error("Step should be able to undo.")
-			} else if err != nil && s.undoErr.Error() != tt.result.Error() {
+			} else if err != nil && s.err.Error() != tt.result.Error() {
 				t.Error("Step should be have a same error internally.")
 			}
 		})
@@ -180,9 +181,9 @@ func TestStepUndo(t *testing.T) {
 		}
 	})
 
-	t.Log("Undo an undone step.")
+	t.Log("Undo an executed step.")
 	for _, tt := range test {
-		t.Run("Undone", func(t *testing.T) {
+		t.Run("Executed", func(t *testing.T) {
 			s := &Step{
 				mutex:  &sync.Mutex{},
 				undoer: tt.undoer,
@@ -195,8 +196,8 @@ func TestStepUndo(t *testing.T) {
 	}
 }
 
-func TestStepDone(t *testing.T) {
-	t.Log("Get done status.")
+func TestStepFin(t *testing.T) {
+	t.Log("Get fin status.")
 	var normalTest = []int{
 		0,
 		1,
@@ -208,15 +209,15 @@ func TestStepDone(t *testing.T) {
 				mutex: &sync.Mutex{},
 				step:  tt,
 			}
-			if s.Done() != (tt == 1) {
-				t.Error("Done status of step should be the same.")
+			if s.Fin() != (math.Abs(float64(tt)) == 1) {
+				t.Error("Fin status of step should be the same.")
 			}
 		})
 	}
 }
 
-func TestStepUndone(t *testing.T) {
-	t.Log("Get undone status.")
+func TestStepStep(t *testing.T) {
+	t.Log("Get step status.")
 	var normalTest = []int{
 		0,
 		1,
@@ -228,15 +229,18 @@ func TestStepUndone(t *testing.T) {
 				mutex: &sync.Mutex{},
 				step:  tt,
 			}
-			if s.Undone() != (tt == -1) {
-				t.Error("Undone status of step should be the same.")
+			if s.Step() != int(math.Abs(float64(tt))) {
+				t.Error("Step status should be the same.")
+			}
+			if s.Step() < 0 {
+				t.Error("Step should be non-negative.")
 			}
 		})
 	}
 }
 
-func TestStepDoneStep(t *testing.T) {
-	t.Log("Get done step status.")
+func TestStepProgress(t *testing.T) {
+	t.Log("Get progress status.")
 	var normalTest = []int{
 		0,
 		1,
@@ -248,197 +252,92 @@ func TestStepDoneStep(t *testing.T) {
 				mutex: &sync.Mutex{},
 				step:  tt,
 			}
-			if tt <= 0 && s.DoneStep() > 0 ||
-				tt > 0 && s.DoneStep() != tt {
-				t.Error("Done step status should be the same.")
+			if s.Progress() != math.Abs(float64(tt)) {
+				t.Error("Progress status of step should be the same.")
 			}
-			if s.DoneStep() < 0 {
-				t.Error("Done step should be non-negative.")
-			}
-		})
-	}
-}
-
-func TestStepUndoneStep(t *testing.T) {
-	t.Log("Get undone step status.")
-	var normalTest = []int{
-		0,
-		1,
-		-1,
-	}
-	for _, tt := range normalTest {
-		t.Run("Normal", func(t *testing.T) {
-			s := &Step{
-				mutex: &sync.Mutex{},
-				step:  tt,
-			}
-			if tt >= 0 && s.UndoneStep() > 0 ||
-				tt < 0 && s.UndoneStep() != -tt {
-				t.Error("Undone step status should be the same.")
-			}
-			if s.UndoneStep() < 0 {
-				t.Error("Undone step should be non-negative.")
+			if s.Progress() < 0 || s.Progress() > 1 {
+				t.Error("Progress exceeds the range of 0~1.")
 			}
 		})
 	}
 }
 
-func TestStepDoneProgress(t *testing.T) {
-	t.Log("Get done progress status.")
-	var normalTest = []int{
-		0,
-		1,
-		-1,
-	}
-	for _, tt := range normalTest {
-		t.Run("Normal", func(t *testing.T) {
-			s := &Step{
-				mutex: &sync.Mutex{},
-				step:  tt,
-			}
-			if (s.DoneProgress() == 1) != (tt == 1) {
-				t.Error("Done progress status of step should be the same.")
-			}
-			if s.DoneProgress() < 0 || s.DoneProgress() > 1 {
-				t.Error("Done progress exceeds the range of 0~1.")
-			}
-		})
-	}
-}
-
-func TestStepUndoneProgress(t *testing.T) {
-	t.Log("Get undone progress status.")
-	var normalTest = []int{
-		0,
-		1,
-		-1,
-	}
-	for _, tt := range normalTest {
-		t.Run("Normal", func(t *testing.T) {
-			s := &Step{
-				mutex: &sync.Mutex{},
-				step:  tt,
-			}
-			if (s.UndoneProgress() == 1) != (tt == -1) {
-				t.Error("Undone progress status of step should be the same.")
-			}
-			if s.UndoneProgress() < 0 || s.UndoneProgress() > 1 {
-				t.Error("Undone progress exceeds the range of 0~1.")
-			}
-		})
-	}
-}
-
-func TestStepDoError(t *testing.T) {
+func TestStepError(t *testing.T) {
 	var test = []struct {
-		a      func() error
-		b      func() error
-		result error
+		a func() error
+		b func() error
 	}{
 		{
-			a:      func() error { return nil },
-			b:      func() error { return nil },
-			result: nil,
+			a: func() error { return nil },
+			b: func() error { return nil },
 		},
 		{
-			a:      func() error { return nil },
-			b:      func() error { return errors.New("") },
-			result: nil,
+			a: func() error { return nil },
+			b: func() error { return errors.New("") },
 		},
 		{
-			a:      func() error { return errors.New("") },
-			b:      func() error { return nil },
-			result: errors.New(""),
+			a: func() error { return errors.New("") },
+			b: func() error { return nil },
 		},
 		{
-			a:      func() error { return errors.New("") },
-			b:      func() error { return errors.New("") },
-			result: errors.New(""),
+			a: func() error { return errors.New("") },
+			b: func() error { return errors.New("") },
 		},
 	}
 
-	t.Log("Get do error from an done step.")
+	t.Log("Get do error from an executed step.")
 	for _, tt := range test {
-		t.Run("Normal", func(t *testing.T) {
+		t.Run("Normal do", func(t *testing.T) {
 			s := &Step{
 				mutex:  &sync.Mutex{},
 				doer:   tt.a,
 				undoer: tt.b,
 			}
 			s.Do()
-			if err := s.DoError(); err != tt.result && err.Error() != tt.result.Error() {
+			if err := s.Error(); err != tt.a() && err.Error() != tt.a().Error() {
 				t.Error("Do error should be able to get.")
 			}
 		})
 	}
 
-	t.Log("Get do error from a non-done step.")
+	t.Log("Get do error from a non-executed step.")
 	for _, tt := range test {
-		t.Run("Non-done", func(t *testing.T) {
+		t.Run("Non-executed do", func(t *testing.T) {
 			s := &Step{
 				mutex:  &sync.Mutex{},
 				doer:   tt.a,
 				undoer: tt.b,
 			}
-			if err := s.DoError(); err != ErrStepNonDone {
+			if err := s.Error(); err != ErrStepNotExecuted {
 				t.Error("Do error should not be able to get.")
 			}
 		})
 	}
-}
 
-func TestStepUndoError(t *testing.T) {
-	var test = []struct {
-		a      func() error
-		b      func() error
-		result error
-	}{
-		{
-			a:      func() error { return nil },
-			b:      func() error { return nil },
-			result: nil,
-		},
-		{
-			a:      func() error { return nil },
-			b:      func() error { return errors.New("") },
-			result: errors.New(""),
-		},
-		{
-			a:      func() error { return errors.New("") },
-			b:      func() error { return nil },
-			result: nil,
-		},
-		{
-			a:      func() error { return errors.New("") },
-			b:      func() error { return errors.New("") },
-			result: errors.New(""),
-		},
-	}
-
-	t.Log("Get undo error from an undone step.")
+	t.Log("Get undo error from an executed step.")
 	for _, tt := range test {
-		t.Run("Normal", func(t *testing.T) {
+		t.Run("Normal - undo", func(t *testing.T) {
 			s := &Step{
 				mutex:  &sync.Mutex{},
 				doer:   tt.a,
 				undoer: tt.b,
 			}
 			s.Undo()
-			if err := s.UndoError(); err != tt.result && err.Error() != tt.result.Error() {
+			if err := s.Error(); err != tt.b() && err.Error() != tt.b().Error() {
 				t.Error("Undo error should be able to get.")
 			}
 		})
 	}
 
-	t.Log("Get undo error from a non-undone step.")
+	t.Log("Get undo error from a non-executed step.")
 	for _, tt := range test {
-		t.Run("Non-undone", func(t *testing.T) {
+		t.Run("Non-executed - undo", func(t *testing.T) {
 			s := &Step{
 				mutex:  &sync.Mutex{},
 				doer:   tt.a,
 				undoer: tt.b,
 			}
-			if err := s.UndoError(); err != ErrStepNonUndone {
+			if err := s.Error(); err != ErrStepNotExecuted {
 				t.Error("Undo error should not be able to get.")
 			}
 		})
